@@ -18,6 +18,8 @@
   },
   "homepage": "https://github.com/gupta-harshal/LanguageLearning#readme",
   "dependencies": {
+    "express": "^5.1.0",
+    "exprss": "^0.0.1-security",
     "recoil": "^0.7.7"
   }
 }

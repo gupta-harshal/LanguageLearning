@@ -33,9 +33,9 @@ export default function PrintingText({ texts, className = [] }: Input) {
     }
   }
   return (
-    <h1 className={` text-9xl ${className[displayTextIndex]}`}>
+    <h1 className={` ${className[displayTextIndex]}`}>
       {texts[displayTextIndex].substring(0, index)}
-      <span className=" border-r-2 border-secondary-font-color animate-ping" />
+      <span className=" border-r-2 border-white animate-ping" />
     </h1>
   )
 }

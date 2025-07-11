@@ -3,17 +3,19 @@ import { CSS } from '@dnd-kit/utilities';
 import type { ReactNode } from 'react';
 
 interface DraggableProps {
-  children: ReactNode; // Accepts any JSX like <Cloud text="..." />
+  id: string;       
+  children: ReactNode;   
 }
 
-function Draggable({ children }: DraggableProps) {
+function Draggable({ id, children }: DraggableProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: 'unique-id',
+    id,
   });
 
   const style = {
     transform: CSS.Translate.toString(transform),
     touchAction: 'none',
+    cursor: 'grab',
   };
 
   return (

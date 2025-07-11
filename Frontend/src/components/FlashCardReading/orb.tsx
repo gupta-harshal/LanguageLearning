@@ -1,25 +1,13 @@
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
 
 interface OrbProps {
   text: string;
-  effectType?: 'sakura' | 'thunder' | null;
 }
 
-export default function Orb({ text, effectType = null }: OrbProps) {
-  const [showEffect, setShowEffect] = useState(false);
-
-  useEffect(() => {
-    if (effectType) {
-      setShowEffect(true);
-      const timeout = setTimeout(() => setShowEffect(false), 1500);
-      return () => clearTimeout(timeout);
-    }
-  }, [effectType]);
-
+export default function Orb({ text }: OrbProps) {
   return (
     <div className="relative w-96 h-96 flex items-center justify-center overflow-hidden">
-      {/* Misty floating shapes */}
+      {/* Misty background blobs */}
       {[...Array(4)].map((_, i) => (
         <motion.div
           key={i}
@@ -43,7 +31,7 @@ export default function Orb({ text, effectType = null }: OrbProps) {
         />
       ))}
 
-      {/* Glowing central word */}
+      {/* Text */}
       <motion.div
         className="z-20 text-white text-3xl font-bold drop-shadow-xl"
         initial={{ opacity: 0 }}
@@ -59,40 +47,6 @@ export default function Orb({ text, effectType = null }: OrbProps) {
         animate={{ scale: [1, 1.2, 1] }}
         transition={{ duration: 6, repeat: Infinity }}
       />
-
-      {/* 🌸 Cherry Blossom Effect */}
-      {showEffect && effectType === 'sakura' &&
-        [...Array(10)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-4 h-4 bg-pink-300 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: '-10%',
-              zIndex: 50,
-            }}
-            animate={{
-              y: '110%',
-              x: [0, Math.random() * 40 - 20],
-              rotate: 360,
-              opacity: [1, 0],
-            }}
-            transition={{
-              duration: 2 + Math.random() * 2,
-              ease: 'easeInOut',
-            }}
-          />
-        ))}
-
-      {/* ⚡ Thunder Flash Effect */}
-      {showEffect && effectType === 'thunder' && (
-        <motion.div
-          className="absolute inset-0 bg-white z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 0] }}
-          transition={{ duration: 0.3 }}
-        />
-      )}
     </div>
   );
 }

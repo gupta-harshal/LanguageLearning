@@ -23,5 +23,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src","svg.d.ts"],
+  "include": ["src","svg.d.ts", "src/components/FlashCardReading/orb.tsx"],
 }

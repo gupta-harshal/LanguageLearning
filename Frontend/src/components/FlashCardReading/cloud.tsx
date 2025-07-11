@@ -2,12 +2,13 @@ import cloud from '../../assets/cloud.svg';
 import Draggable from '../../utils/FlashCardReading/drag';
 
 interface CloudProps {
+  id: string;             // 👈 Required draggable ID
   text: string;
   className?: string;
 }
 
 // Renders the cloud-shaped visual component with text inside
-function helper({ text, className = '' }: CloudProps) {
+function helper({ text, className = '' }: Omit<CloudProps, 'id'>) {
   return (
     <div className={`relative flex items-center justify-center h-[120px] min-w-[200px] w-fit px-4 py-2 ${className}`}>
       <img
@@ -22,7 +23,7 @@ function helper({ text, className = '' }: CloudProps) {
   );
 }
 
-// Wraps the cloud in a draggable wrapper
-export default function Cloud({ text, className }: CloudProps) {
-  return <Draggable>{helper({ text, className })}</Draggable>;
+// Wraps the cloud in a draggable wrapper with unique ID
+export default function Cloud({ id, text, className }: CloudProps) {
+  return <Draggable id={id}>{helper({ text, className })}</Draggable>;
 }

@@ -1,12 +1,13 @@
 import { useDroppable } from '@dnd-kit/core';
-import Orb from '../../components/FlashCardReading/orb';
+import type { ReactNode } from 'react';
 
-export default function DroppableOrb() {
-  const { setNodeRef } = useDroppable({ id: 'orb' });
+interface DroppableProps {
+  id: string;
+  children: ReactNode;
+}
 
-  return (
-    <div ref={setNodeRef}>
-      <Orb text="This Word" />
-    </div>
-  );
+export default function Droppable({ id, children }: DroppableProps) {
+  const { setNodeRef } = useDroppable({ id });
+
+  return <div ref={setNodeRef}>{children}</div>;
 }

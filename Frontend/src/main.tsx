@@ -4,7 +4,7 @@ import './App.css'
 import {createBrowserRouter, RouterProvider} from 'react-router-dom'
 import Home from './pages/Home.tsx'
 import CardGame1 from './pages/CardGame1.tsx'
-
+import { RecoilRoot } from 'recoil'
 const router= createBrowserRouter([{
   path: '/',
   element: <Home/>,
@@ -17,6 +17,8 @@ const router= createBrowserRouter([{
 ]);
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <RecoilRoot>
     <RouterProvider router={router} />
+    </RecoilRoot>
   </StrictMode>,
 )

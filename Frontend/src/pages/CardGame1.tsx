@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Cloud from '../components/FlashCardReading/cloud';
-import DroppableOrb from '../utils/FlashCardReading/drop';
+import Orb from '../components/FlashCardReading/orb';
 import { DndContext } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
-
 type CloudData = {
   id: string;
   text: string;
@@ -160,7 +159,7 @@ export default function CardGame1() {
                 transition={{ duration: 2 }}
               />
             )}
-            <DroppableOrb />
+            <Orb />
           </div>
         </div>
       </div>

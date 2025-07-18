@@ -1,6 +1,7 @@
 import Header from "../components/Header"
 import Button from "../components/Home/Button"
 import PrintingText from "../components/PrintingText"
+import TranslateBox from "../components/TranslateBox"
 
 export default function Home() {
   return (
@@ -23,6 +24,30 @@ export default function Home() {
             <Button className=" bg-primary-button shadow-[#ff2054]">Get Started</Button>
             <Button className=" bg-secodary-button shadow-[#ff688b]">Already A Member</Button>
         </div>
+      </div>
+      <div className=" flex flex-col items-stretch w-full justify-stretch">
+        <div className=" relative min-h-80 flex flex-row justify-center items-center">
+        <TranslateBox 
+        heading="Hello" 
+        text="Woow"
+        translatedHeading="こんにちは"
+        translated="ok"/>
+        </div>
+        <div className=" relative min-h-80 flex flex-row justify-center items-center">
+        <TranslateBox 
+        heading="Hello" 
+        text="Woow"
+        translatedHeading="こんにちは"
+        translated="ok"/>
+        </div>
+        <div className=" relative min-h-80 flex flex-row justify-center items-center">
+        <TranslateBox 
+        heading="Hello" 
+        text="Woow"
+        translatedHeading="こんにちは"
+        translated="ok"/>
+        </div>
+    
       </div>
     </div>
   )

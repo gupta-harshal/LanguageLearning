@@ -5,7 +5,7 @@ import {createBrowserRouter, RouterProvider} from 'react-router-dom'
 import Home from './pages/Home.tsx'
 import CardGame1 from './pages/CardGame1.tsx'
 import { RecoilRoot } from 'recoil'
-import INR from './pages/trial.tsx'
+import Dashboard from './pages/Darshboard.tsx'
 const router= createBrowserRouter([{
   path: '/',
   element: <Home/>,
@@ -17,7 +17,11 @@ const router= createBrowserRouter([{
 }
 ,{
   path :'/trial',
-  element: <div><INR/></div>,
+},
+{
+  path : '/dashboard',
+  element : <Dashboard/>,
+  errorElement: <div>404 Not Found</div>,
 }
 ]);
 createRoot(document.getElementById('root')!).render(

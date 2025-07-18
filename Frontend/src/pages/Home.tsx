@@ -5,9 +5,10 @@ import TranslateBox from "../components/TranslateBox"
 
 export default function Home() {
   return (
-    <div className="light bg-gradient-to-b h-[2000px] from-primary-foreground via-white to-primary-button ">
-        <Header/>
-      <div className=" h-screen flex flex-row justify-center items-center gap-20">
+    <main 
+    className="light bg-gradient-to-b from-primary-foreground via-white to-primary-button overflow-y-scroll snap-mandatory snap-y">
+      <Header />
+      <section className=" h-screen flex flex-row justify-center items-center gap-20 snap-start">
         <div className=" w-[625px] h-80">
           <PrintingText
             texts={[
@@ -21,33 +22,40 @@ export default function Home() {
           />
         </div>
         <div className=" flex flex-col gap-7">
-            <Button className=" bg-primary-button shadow-[#ff2054]">Get Started</Button>
-            <Button className=" bg-secodary-button shadow-[#ff688b]">Already A Member</Button>
+          <Button className=" bg-primary-button shadow-[#ff2054]">
+            Get Started
+          </Button>
+          <Button className=" bg-secodary-button shadow-[#ff688b]">
+            Already A Member
+          </Button>
         </div>
-      </div>
-      <div className=" flex flex-col items-stretch w-full justify-stretch">
+      </section>
+      <section className=" flex flex-col items-stretch w-full justify-stretch snap-start">
         <div className=" relative min-h-80 flex flex-row justify-center items-center">
-        <TranslateBox 
-        heading="Hello" 
-        text="Woow"
-        translatedHeading="こんにちは"
-        translated="ok"/>
-        </div>
-        <div className=" relative min-h-80 flex flex-row justify-center items-center">
-        <TranslateBox 
-        heading="Hello" 
-        text="Woow"
-        translatedHeading="こんにちは"
-        translated="ok"/>
+          <TranslateBox
+            heading="Hello"
+            text="Woow"
+            translatedHeading="こんにちは"
+            translated="ok"
+          />
         </div>
         <div className=" relative min-h-80 flex flex-row justify-center items-center">
-        <TranslateBox 
-        heading="Hello" 
-        text="Woow"
-        translatedHeading="こんにちは"
-        translated="ok"/>
-        </div>    
-      </div>
-    </div>
+          <TranslateBox
+            heading="Hello"
+            text="Woow"
+            translatedHeading="こんにちは"
+            translated="ok"
+          />
+        </div>
+        <div className=" relative min-h-80 flex flex-row justify-center items-center">
+          <TranslateBox
+            heading="Hello"
+            text="Woow"
+            translatedHeading="こんにちは"
+            translated="ok"
+          />
+        </div>
+      </section>
+    </main>
   )
 }

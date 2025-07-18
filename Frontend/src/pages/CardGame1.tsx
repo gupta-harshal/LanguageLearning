@@ -4,6 +4,8 @@ import Orb from '../components/FlashCardReading/orb';
 import { DndContext } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
+import Score from '../components/FlashCardReading/score';
+import backbutton from '../assets/backbutton.svg';
 type CloudData = {
   id: string;
   text: string;
@@ -19,7 +21,8 @@ export default function CardGame1() {
 
   const correctId = 'cloud-2'; // "Three" is correct
 
-  useEffect(() => {
+useEffect(() => {
+  const generateClouds = () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const cx = w / 2;
@@ -43,7 +46,15 @@ export default function CardGame1() {
       });
     }
     setClouds(generated);
-  }, []);
+  };
+
+  generateClouds(); // initial call
+
+  window.addEventListener('resize', generateClouds); // add listener
+
+  return () => window.removeEventListener('resize', generateClouds); // cleanup
+}, []);
+
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -62,7 +73,12 @@ export default function CardGame1() {
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <div className="relative w-screen h-screen overflow-hidden bg-gradient-to-b from-[#80E2DD] via-white to-[#45CFFB]">
-
+        <div className="shadow-xl rounded-lg p-4 relative z-20 h-[10%]">
+          <div className="flex justify-between pr-3">
+            <img src={backbutton} alt="Back" className="w-10 h-10 cursor-pointer" onClick={() => window.history.back()} />
+            <Score />
+          </div>
+        </div>
         {/* Thunder Flash */}
         {effectType === 'thunder' && (
           <motion.div

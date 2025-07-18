@@ -46,8 +46,7 @@ export default function Home() {
         text="Woow"
         translatedHeading="こんにちは"
         translated="ok"/>
-        </div>
-    
+        </div>    
       </div>
     </div>
   )

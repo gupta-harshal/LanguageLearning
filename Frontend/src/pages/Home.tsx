@@ -6,7 +6,7 @@ import TranslateBox from "../components/TranslateBox"
 export default function Home() {
   return (
     <main 
-    className="light bg-gradient-to-b from-primary-foreground via-white to-primary-button overflow-y-scroll snap-mandatory snap-y">
+    className="light bg-gradient-to-b from-primary-foreground via-white to-primary-button">
       <Header />
       <section className=" h-screen flex flex-row justify-center items-center gap-20 snap-start">
         <div className=" w-[625px] h-80">
@@ -25,12 +25,20 @@ export default function Home() {
           <Button className=" bg-primary-button shadow-[#ff2054]">
             Get Started
           </Button>
-          <Button className=" bg-secodary-button shadow-[#ff688b]">
+          <Button className=" bg-secondary-button shadow-[#ff688b]">
             Already A Member
           </Button>
         </div>
       </section>
       <section className=" flex flex-col items-stretch w-full justify-stretch snap-start">
+        <div className=" relative min-h-80 flex flex-row justify-center items-center">
+          <TranslateBox
+            heading="Hello"
+            text="Woow"
+            translatedHeading="こんにちは"
+            translated="ok"
+          />
+        </div>
         <div className=" relative min-h-80 flex flex-row justify-center items-center">
           <TranslateBox
             heading="Hello"

@@ -1,4 +1,3 @@
-import React from "react";
 import EngToJap from "../components/engtoJap";
 
 export default function INR() {

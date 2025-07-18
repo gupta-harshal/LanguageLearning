@@ -6,6 +6,7 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 import Score from '../components/FlashCardReading/score';
 import backbutton from '../assets/backbutton.svg';
+
 type CloudData = {
   id: string;
   text: string;
@@ -18,10 +19,9 @@ export default function CardGame1() {
   const [clouds, setClouds] = useState<CloudData[]>([]);
   const [effectType, setEffectType] = useState<'sakura' | 'thunder' | null>(null);
   const [orbTint, setOrbTint] = useState<'green' | 'red' | null>(null);
-
+  const [lives, setLives] = useState(3);
   const correctId = 'cloud-2'; // "Three" is correct
 
-useEffect(() => {
   const generateClouds = () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -48,20 +48,24 @@ useEffect(() => {
     setClouds(generated);
   };
 
-  generateClouds(); // initial call
-
-  window.addEventListener('resize', generateClouds); // add listener
-
-  return () => window.removeEventListener('resize', generateClouds); // cleanup
-}, []);
-
+  useEffect(() => {
+    generateClouds();
+    window.addEventListener('resize', generateClouds);
+    return () => window.removeEventListener('resize', generateClouds);
+  }, []);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+
     if (over?.id === 'orb') {
       const isCorrect = active.id === correctId;
       setEffectType(isCorrect ? 'sakura' : 'thunder');
       setOrbTint(isCorrect ? 'green' : 'red');
+
+      if (!isCorrect) {
+        setLives(prev => Math.max(prev - 1, 0));
+        setClouds(prev => prev.filter(cloud => cloud.id !== active.id)); // ❌ only delete that cloud
+      }
 
       setTimeout(() => {
         setEffectType(null);
@@ -79,6 +83,12 @@ useEffect(() => {
             <Score />
           </div>
         </div>
+
+        {/* Lives display */}
+        <div className="absolute top-5 left-1/2 transform -translate-x-1/2 z-40 text-lg font-bold text-red-500">
+          Lives: {[...Array(lives)].map((_, i) => <span key={i}>❤️</span>)}
+        </div>
+
         {/* Thunder Flash */}
         {effectType === 'thunder' && (
           <motion.div
@@ -147,7 +157,7 @@ useEffect(() => {
             );
           })}
 
-        {/* Draggable Clouds */}
+        {/* Clouds */}
         {clouds.map((c) => (
           <div
             key={c.id}
@@ -163,7 +173,7 @@ useEffect(() => {
           </div>
         ))}
 
-        {/* Orb with glow tint */}
+        {/* Orb */}
         <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
           <div className="relative">
             {orbTint && (

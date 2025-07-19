@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
 @layer base {
   :root {
     --primary-button: rgba(255, 120, 152, 1);
@@ -15,7 +24,7 @@
 
   .light {
     --primary-background: rgba(250, 243, 233, 1);
-    --secondary-background: rgba(220, 222, 226, 1);
+    --secondary-background: rgb(255, 242, 211);
     --primary-foreground: rgba(69, 207, 251, 1);
     --secondary-foreground: rgba(105, 237, 236, 1);
     --primary-font-color: rgb(28, 28, 28);

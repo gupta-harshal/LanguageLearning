@@ -18,6 +18,7 @@
     "react-router-dom": "^7.6.3",
     "recoil": "^0.7.7",
     "tailwindcss": "^4.1.11",
+    "uuid": "^11.1.0",
     "wanakana": "^5.3.1"
   },
   "devDependencies": {

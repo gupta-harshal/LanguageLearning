@@ -51,6 +51,16 @@
 }
 
 @theme inline {
+
+  @keyframes pop{
+    0% {
+      transform: scale(0.90);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
   --font-anglo-japanese: "ango-japanese";
   --font-bits: "bits";
   --font-japanese: "japanese";

@@ -18,7 +18,7 @@ const router= createBrowserRouter([{
 }
 ,{
   path :'/trial',
-  element : <GameCanvas/>,
+  
 },
 {
   path : '/dashboard',

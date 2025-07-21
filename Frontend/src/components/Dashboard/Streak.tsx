@@ -4,7 +4,8 @@ import ModalPortal from "../Modals/ModalPortal"
 import Dropdown, { type Option } from "../Modals/Dropdown"
 
 export default function Streak() {
-  const [monthDropdownVisible, setMonthDropdownVisible] = useState<boolean>(false)
+  const [monthDropdownVisible, setMonthDropdownVisible] =
+    useState<boolean>(false)
   const [yearDropdownVisible, setYearDropdownVisible] = useState<boolean>(false)
   const [selectedMonth, setSelectedMonth] = useState<number>(
     new Date().getMonth()
@@ -12,6 +13,10 @@ export default function Streak() {
   const [selectedYear, setSelectedYear] = useState<number>(
     new Date().getFullYear()
   )
+  const [modalPosition, setModalPosition] = useState<{
+    left: number
+    top: number
+  }>({ top: 0, left: 0 })
 
   const yearOptions = useRef<Option[]>([])
   const monthOptions = useRef<Option[]>([
@@ -90,9 +95,10 @@ export default function Streak() {
   ])
 
   useEffect(() => {
+    yearOptions.current = []
     for (
       let i = new Date().getFullYear();
-      i >= Math.max(2000, new Date(/*user.createdAt*/).getFullYear());
+      i >= Math.max(2025 /*new Date(user.createdAt).getFullYear() */);
       i--
     ) {
       yearOptions.current.push({
@@ -104,12 +110,25 @@ export default function Streak() {
     }
   }, [])
 
-  const handleMonthDropdown = () => {
+  useEffect(() => {
+    if (Number(new Date()) < Number(new Date(selectedYear, selectedMonth, 1))) {
+      setSelectedMonth(new Date().getMonth())
+      setSelectedYear(new Date().getFullYear())
+    }
+  }, [selectedMonth, selectedYear])
+
+  const handleMonthDropdown = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
     setMonthDropdownVisible(true)
+    setModalPosition({ left: e.clientX, top: e.clientY + 10 })
   }
 
-  const handleYearDropdown = () => {
+  const handleYearDropdown = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
     setYearDropdownVisible(true)
+    setModalPosition({ left: e.clientX, top: e.clientY + 10 })
   }
 
   const hideModal = () => {
@@ -118,26 +137,46 @@ export default function Streak() {
   }
 
   return (
-    <div className=" w-full h-96">
+    <div className=" w-full bg-pink-secondary/50 rounded-xl p-4 h-fit flex flex-col gap-5 justify-center items-stretch">
       {yearDropdownVisible && (
         <ModalPortal hideModal={hideModal}>
-          <Dropdown options={yearOptions.current} hideModal={hideModal} />
+          <Dropdown
+            style={{ top: modalPosition.top, left: modalPosition.left }}
+            options={yearOptions.current}
+            hideModal={hideModal}
+          />
         </ModalPortal>
       )}
       {monthDropdownVisible && (
         <ModalPortal hideModal={hideModal}>
-          <Dropdown options={monthOptions.current} hideModal={hideModal} />
+          <Dropdown
+            style={{ top: modalPosition.top, left: modalPosition.left }}
+            options={
+              selectedYear !== new Date().getFullYear()
+                ? monthOptions.current
+                : monthOptions.current.slice(0, new Date().getMonth() + 1)
+            }
+            hideModal={hideModal}
+          />
         </ModalPortal>
       )}
-      <div className=" flex w-full justify-between items-center px-5">
-        <h1>Streak</h1>
-        <div>
-          <h1 onClick={handleMonthDropdown}>
-            {new Date().toLocaleString("default", { month: "short" })}
-          </h1>
-          <h1 onClick={handleYearDropdown}>
-            {new Date().toLocaleString("default", { year: "numeric" })}
-          </h1>
+      <div className=" flex w-full justify-between items-center">
+        <h1 className=" text-white text-shadow-primary-font-color text-shadow-[3px_2px_2px] font-anglo-japanese text-4xl">
+          Streak
+        </h1>
+        <div className=" flex gap-5">
+          <div
+            className="font-semibold text-white text-shadow-[1px_1px_1px] text-shadow-secondary-font-color cursor-pointer"
+            onClick={handleMonthDropdown}
+          >
+            {monthOptions.current[selectedMonth].text}
+          </div>
+          <div
+            className=" cursor-pointer font-semibold text-white text-shadow-[1px_1px_1px] text-shadow-secondary-font-color"
+            onClick={handleYearDropdown}
+          >
+            {selectedYear}
+          </div>
         </div>
       </div>
       <Calendar month={selectedMonth} year={selectedYear} />

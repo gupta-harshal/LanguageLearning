@@ -5,17 +5,15 @@ interface AsteroidProps {
   id: string;
   text: string;
   onDestroy: (id: string) => void;
+  fallSpeed?: number; // optional: seconds it takes to fall
 }
 
-const Asteroid = ({ id, text, onDestroy }: AsteroidProps) => {
+const Asteroid: React.FC<AsteroidProps> = ({ id, text, onDestroy, fallSpeed = 15 }) => {
   const [startLeft, setStartLeft] = useState(0);
-  const [fallDuration, setFallDuration] = useState(0);
 
   useEffect(() => {
     const left = Math.random() * (window.innerWidth - 100);
-    const duration = 10 + Math.random() * 4; // seconds
     setStartLeft(left);
-    setFallDuration(duration);
   }, []);
 
   const handleAnimationEnd = () => {
@@ -32,7 +30,7 @@ const Asteroid = ({ id, text, onDestroy }: AsteroidProps) => {
         width: '96px',
         height: '96px',
         zIndex: 10,
-        animation: `fall ${fallDuration}s linear forwards`,
+        animation: `fall ${fallSpeed}s linear forwards`,
         pointerEvents: 'none',
       }}
     >
@@ -70,15 +68,17 @@ const Asteroid = ({ id, text, onDestroy }: AsteroidProps) => {
       </div>
 
       <style>
+        
         {`
           @keyframes fall {
             from {
               top: -100px;
             }
             to {
-              top: ${window.innerHeight + 100}px;
+              top: ${window.innerHeight - 150}px;
+              left: ${window.innerWidth / 2 }px;
+              // This line was added to ensure asteroids hits center with jitter 
             }
-
           }
           @keyframes spin {
             from { transform: rotate(0deg); }

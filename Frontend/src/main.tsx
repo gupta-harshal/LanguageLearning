@@ -6,7 +6,7 @@ import Home from './pages/Home.tsx'
 import CardGame1 from './pages/CardGame1.tsx'
 import { RecoilRoot } from 'recoil'
 import Dashboard from './pages/Darshboard.tsx'
-import GameCanvas from './pages/Game.tsx'
+import GameCanvas from './pages/AsteroidShooter.tsx'
 const router= createBrowserRouter([{
   path: '/',
   element: <Home/>,

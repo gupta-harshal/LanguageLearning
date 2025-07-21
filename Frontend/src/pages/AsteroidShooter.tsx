@@ -5,9 +5,6 @@ import EngToJap from '../components/engtoJap';
 interface AsteroidType {
   id: string;
   text: string;
-  startX: number;
-  startY: number;
-  angleToTarget: number;
 }
 
 const GameCanvas = () => {
@@ -41,29 +38,7 @@ const GameCanvas = () => {
     const japaneseWords = ['くも', 'そら', 'ほし', 'つき', 'やま'];
     const text = japaneseWords[Math.floor(Math.random() * japaneseWords.length)];
 
-    let startX = 0, startY = 0;
-    const edge = Math.floor(Math.random() * 4);
-
-    if (edge === 0) {
-      startX = Math.random() * window.innerWidth;
-      startY = -50;
-    } else if (edge === 1) {
-      startX = Math.random() * window.innerWidth;
-      startY = window.innerHeight + 50;
-    } else if (edge === 2) {
-      startX = -50;
-      startY = Math.random() * window.innerHeight;
-    } else {
-      startX = window.innerWidth + 50;
-      startY = Math.random() * window.innerHeight;
-    }
-
-    // Center of EngToJap zone
-    const targetX = window.innerWidth * 0.3 + window.innerWidth * 0.2;
-    const targetY = window.innerHeight - 50;
-    const angle = Math.atan2(targetY - startY, targetX - startX);
-
-    setAsteroids(prev => [...prev, { id, text, startX, startY, angleToTarget: angle }]);
+    setAsteroids(prev => [...prev, { id, text }]);
   };
 
   useEffect(() => {
@@ -83,10 +58,7 @@ const GameCanvas = () => {
   };
 
   return (
-    <div
-      className="relative w-full h-screen overflow-hidden"
-      style={{ backgroundColor: 'black', position: 'relative' }}
-    >
+    <div className="relative w-full h-screen overflow-hidden bg-black">
       {/* Starfield */}
       {stars.map((star, idx) => (
         <div
@@ -109,16 +81,12 @@ const GameCanvas = () => {
           key={ast.id}
           id={ast.id}
           text={ast.text}
-          startX={ast.startX}
-          startY={ast.startY}
-          angleToTarget={ast.angleToTarget}
           onDestroy={destroyAsteroid}
-          targetX={window.innerWidth * 0.3}
-          targetWidth={window.innerWidth * 0.4}
+          fallSpeed={15} // seconds, adjust later dynamically
         />
       ))}
 
-      {/* "Spaceship" input box */}
+      {/* Input box */}
       <EngToJap
         className="absolute bottom-[2%] left-[30%] w-[40%] p-3 text-white text-lg bg-gray-800 border border-white rounded-md text-center"
         onEnter={handleEnter}

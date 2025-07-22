@@ -35,7 +35,7 @@ export default function Orb() {
 
         {/* Word text */}
         <motion.div
-          className="z-20 text-white text-3xl font-bold drop-shadow-xl"
+          className="z-20 font-anglo-japan text-white text-3xl drop-shadow-xl"
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 1, 1, 0] }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}

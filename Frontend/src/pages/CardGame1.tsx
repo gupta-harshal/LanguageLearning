@@ -4,6 +4,9 @@ import Orb from '../components/FlashCardReading/orb';
 import { DndContext } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
+import Score from '../components/FlashCardReading/score';
+import backbutton from '../assets/backbutton.svg';
+
 type CloudData = {
   id: string;
   text: string;
@@ -16,10 +19,10 @@ export default function CardGame1() {
   const [clouds, setClouds] = useState<CloudData[]>([]);
   const [effectType, setEffectType] = useState<'sakura' | 'thunder' | null>(null);
   const [orbTint, setOrbTint] = useState<'green' | 'red' | null>(null);
-
+  const [lives, setLives] = useState(3);
   const correctId = 'cloud-2'; // "Three" is correct
 
-  useEffect(() => {
+  const generateClouds = () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const cx = w / 2;
@@ -43,14 +46,26 @@ export default function CardGame1() {
       });
     }
     setClouds(generated);
+  };
+
+  useEffect(() => {
+    generateClouds();
+    window.addEventListener('resize', generateClouds);
+    return () => window.removeEventListener('resize', generateClouds);
   }, []);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+
     if (over?.id === 'orb') {
       const isCorrect = active.id === correctId;
       setEffectType(isCorrect ? 'sakura' : 'thunder');
       setOrbTint(isCorrect ? 'green' : 'red');
+
+      if (!isCorrect) {
+        setLives(prev => Math.max(prev - 1, 0));
+        setClouds(prev => prev.filter(cloud => cloud.id !== active.id)); // ❌ only delete that cloud
+      }
 
       setTimeout(() => {
         setEffectType(null);
@@ -62,6 +77,17 @@ export default function CardGame1() {
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <div className="relative w-screen h-screen overflow-hidden bg-gradient-to-b from-[#80E2DD] via-white to-[#45CFFB]">
+        <div className="shadow-xl rounded-lg p-4 relative z-20 h-[10%]">
+          <div className="flex justify-between pr-3">
+            <img src={backbutton} alt="Back" className="w-10 h-10 cursor-pointer" onClick={() => window.history.back()} />
+            <Score />
+          </div>
+        </div>
+
+        {/* Lives display */}
+        <div className="absolute top-5 left-1/2 transform -translate-x-1/2 z-40 text-lg font-bold text-red-500">
+          Lives: {[...Array(lives)].map((_, i) => <span key={i}>❤️</span>)}
+        </div>
 
         {/* Thunder Flash */}
         {effectType === 'thunder' && (
@@ -131,7 +157,7 @@ export default function CardGame1() {
             );
           })}
 
-        {/* Draggable Clouds */}
+        {/* Clouds */}
         {clouds.map((c) => (
           <div
             key={c.id}
@@ -147,7 +173,7 @@ export default function CardGame1() {
           </div>
         ))}
 
-        {/* Orb with glow tint */}
+        {/* Orb */}
         <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
           <div className="relative">
             {orbTint && (

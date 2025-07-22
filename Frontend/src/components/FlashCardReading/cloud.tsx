@@ -16,7 +16,7 @@ function helper({ text, className = '' }: Omit<CloudProps, 'id'>) {
         alt="cloud"
         className="absolute inset-0 w-full h-full object-fill z-0"
       />
-      <div className="relative z-10 text-black text-lg font-semibold whitespace-nowrap">
+      <div className="relative z-10 font-anglo-japan text-black text-lg font-semibold whitespace-nowrap">
         {text}
       </div>
     </div>

@@ -2,23 +2,18 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt';
 import { redis } from '../utils/redis';
 
-export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ message: 'No token provided' });
+
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer '))
-      return res.status(401).json({ message: 'Token missing' });
+    const { userId, jti } = verifyToken(token);
+    const session = await redis.get(`session:${userId}:${jti}`);
+    if (!session) return res.status(401).json({ message: 'Session expired or invalid' });
 
-    const token = authHeader.split(' ')[1];
-    const payload = verifyToken(token);
-
-    const redisKey = `session:${payload.userId}:${payload.jti}`;
-    const session = await redis.get(redisKey);
-
-    if (!session) return res.status(401).json({ message: 'Session invalid or expired' });
-
-    req.user = { id: payload.userId };
+    req.user = { id: userId, jti };
     next();
-  } catch (error) {
-    return res.status(401).json({ message: 'Unauthorized' });
+  } catch (err) {
+    res.status(401).json({ message: 'Invalid token' });
   }
 };

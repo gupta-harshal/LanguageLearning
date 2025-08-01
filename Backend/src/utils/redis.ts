@@ -1,7 +1,6 @@
-import Redis from 'ioredis';
+import { Redis } from '@upstash/redis';
 
 export const redis = new Redis({
-  host: 'localhost', // or your Redis server
-  port: 6379,
-  password: process.env.REDIS_PASSWORD || undefined,
+  url: 'https://whole-skylark-6474.upstash.io',
+  token: process.env.REDIS_TOKEN,
 });

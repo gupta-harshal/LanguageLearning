@@ -12,7 +12,7 @@ export const signup = async (req: Request, res: Response) => {
   if (!name || !email || !password) {
     return res.status(400).json({ message: 'Name, email and password are required' });
   }
-
+  
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const user = await prisma.user.create({
@@ -26,7 +26,8 @@ export const signup = async (req: Request, res: Response) => {
   const { token, jti } = generateToken(user.id);
   await redis.set(
     `session:${user.id}:${jti}`,
-    JSON.stringify({ createdAt: new Date().toISOString() }),
+    JSON.stringify({ createdAt: new Date().toISOString(),deviceUserAgent: req.headers['user-agent'] || 'unknown',
+  ipAddress: req.ip || req.socket.remoteAddress || 'unknown' }),
   );
 
   res.json({ token });

@@ -68,7 +68,7 @@ export default function Calendar({
                   </span>
                 )
               } else if (dayNumber <= 0) {
-                return <span></span>
+                return <span key={dayNumber.toString()}></span>
               } else {
                 return null
               }

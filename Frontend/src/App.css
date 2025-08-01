@@ -6,7 +6,7 @@
 }
 
 .no-scrollbar::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
+  opacity: 0; /* Safari and Chrome */
 }
 
 @layer base {
@@ -49,6 +49,26 @@
     src: url("/fonts/KiwiMaru-Regular.ttf") format("truetype");
   }
 }
+
+/* in a global CSS file or a CSS module */
+.scrollbar-hidden-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-hidden-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-hidden-scrollbar::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  transition: background-color 0.3s ease;
+  border-radius: 4px;
+}
+
+.scrollbar-hidden-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 100, 100, 0.5);
+}
+
 
 @theme inline {
 

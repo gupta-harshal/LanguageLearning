@@ -7,6 +7,7 @@ import CardGame1 from './pages/CardGame1.tsx'
 import { RecoilRoot } from 'recoil'
 import Dashboard from './pages/Darshboard.tsx'
 import GameCanvas from './pages/AsteroidShooter.tsx'
+import JapaneseScroll from './pages/StorybookReader..tsx'
 const router= createBrowserRouter([{
   path: '/',
   element: <Home/>,
@@ -18,6 +19,8 @@ const router= createBrowserRouter([{
 }
 ,{
   path :'/trial',
+  element: <JapaneseScroll/>,
+  errorElement: <div>404 Not Found</div>,
   
 },
 {

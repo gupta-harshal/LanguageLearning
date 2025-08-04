@@ -81,4 +81,8 @@
   --color-pink-tertiary: var(--pink-tertiary);
 }
 
+.writing-mode-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+}
 

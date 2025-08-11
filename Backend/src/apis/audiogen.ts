@@ -1,23 +1,13 @@
-import * as fs from 'fs';
-import { Model, Recognizer } from 'vosk';
+import fs from 'fs';
+import OpenAI from 'openai';
+import axios from 'axios';
 
-const MODEL_PATH = '/path/to/vosk-model-small-ja'; 
-const SAMPLE_RATE = 16000;
+const api_key=process.env.OPEN_API_KEY;
+export default function generateText(req:Request,res:Response){
+  const { prompt } = req.body;
+  try{
+    const data=axios.post()
 
-async function transcribeAudio(filePath: string): Promise<string> {
-  if (!fs.existsSync(MODEL_PATH)) {
-    throw new Error('Model path does not exist.');
   }
 
-  const model = new Model(MODEL_PATH);
-  const rec = new Recognizer(model, SAMPLE_RATE);
-
-  const buffer = fs.readFileSync(filePath);
-  rec.acceptWaveform(buffer);
-  const result = rec.finalResult();
-
-  rec.free();
-  model.free();
-
-  return JSON.parse(result).text;
 }

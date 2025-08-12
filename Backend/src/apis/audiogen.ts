@@ -1,7 +1,7 @@
 import fs from 'fs';
 import OpenAI from 'openai';
 import axios from 'axios';
-
+//add changes
 const api_key=process.env.OPEN_API_KEY;
 export default function generateText(req:Request,res:Response){
   const { prompt } = req.body;

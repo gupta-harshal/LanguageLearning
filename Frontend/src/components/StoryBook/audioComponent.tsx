@@ -4,7 +4,7 @@ import { io, Socket } from "socket.io-client";
 
 const SOCKET_URL = "http://localhost:4000";
 const WORD_THRESHOLD = 8; // send after 8 words spoken
-const SILENCE_TIMEOUT_MS = 2000; // send if silence for 2 seconds
+const SILENCE_TIMEOUT_MS = 4000; // send if silence for 2 seconds
 
 const AudioBatchStreaming: React.FC = () => {
   const socketRef = useRef<Socket | null>(null);

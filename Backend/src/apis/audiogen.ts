@@ -11,55 +11,47 @@ import ffmpeg from "fluent-ffmpeg";
 const writeFileAsync = promisify(fs.writeFile);
 const unlinkAsync = promisify(fs.unlink);
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
-if (!OPENAI_API_KEY) {
-  console.error("❌ OPENAI_API_KEY not set in environment variables");
-  process.exit(1);
-}
-
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 
 function calculateAccuracy(expected: string, actual: string): number {
   if (!expected) return 0;
   const setA = new Set(expected.toLowerCase().split(/\s+/));
   const setB = new Set(actual.toLowerCase().split(/\s+/));
-  const intersectionSize = new Set([...setA].filter((x) => setB.has(x))).size;
-  const unionSize = new Set([...setA, ...setB]).size;
-  return unionSize === 0 ? 0 : (intersectionSize / unionSize) * 100;
+  const intersection = [...setA].filter((x) => setB.has(x)).length;
+  const union = new Set([...setA, ...setB]).size;
+  return union ? (intersection / union) * 100 : 0;
 }
 
-async function reencodeAudio(inputPath: string, outputPath: string): Promise<void> {
+function reencodeAudio(inputPath: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
       .noVideo()
       .audioCodec("libopus")
       .format("webm")
-      .on("end", resolve)
-      .on("error", reject)
+      .on("end", () => resolve())
+      .on("error", (err) => reject(err))
       .save(outputPath);
   });
 }
 
-async function logAudioFormat(filePath: string): Promise<void> {
+function logAudioFormat(filePath: string): Promise<boolean> {
   return new Promise((resolve) => {
     ffmpeg.ffprobe(filePath, (err: Error | null, metadata: ffmpeg.FfprobeData) => {
       if (err) {
         console.warn(`⚠️ ffprobe error for ${path.basename(filePath)}:`, err.message);
-        return resolve();
+        resolve(false);
+        return;
       }
-      console.log(`\n🔍 ffprobe info for ${path.basename(filePath)}:`);
-      console.log(JSON.stringify(metadata.format, null, 2));
-      metadata.streams?.forEach((s, i) => {
+      console.log(`\n🔍 ffprobe info for ${path.basename(filePath)}:`, metadata.format);
+      metadata.streams?.forEach((s, i) =>
         console.log(`📻 Stream ${i}:`, {
-          codec_name: s.codec_name,
-          codec_type: s.codec_type,
+          codec: s.codec_name,
           sample_rate: s.sample_rate,
           channels: s.channels,
-          bit_rate: s.bit_rate,
           duration: s.duration,
-        });
-      });
-      resolve();
+        })
+      );
+      resolve(true);
     });
   });
 }
@@ -74,32 +66,39 @@ export function startAudioBatchServer(port: number) {
 
     socket.on("audio-batch", async (audioBuffer: ArrayBuffer) => {
       console.log(`\n🎤 Received audio batch from ${socket.id}`);
-      console.log(`📦 Buffer size: ${audioBuffer.byteLength} bytes`);
+      console.log(`📦 Size: ${audioBuffer.byteLength} bytes`);
 
       const buffer = Buffer.from(audioBuffer);
-      const tempRaw = path.join(tmpdir(), `raw-${Date.now()}.webm`);
-      const tempOut = path.join(tmpdir(), `converted-${Date.now()}.webm`);
+      const rawPath = path.join(tmpdir(), `raw-${Date.now()}.webm`);
+      const convertedPath = path.join(tmpdir(), `conv-${Date.now()}.webm`);
 
       try {
-        await writeFileAsync(tempRaw, buffer);
-        console.log(`💾 Saved raw audio batch to ${tempRaw}`);
+        await writeFileAsync(rawPath, buffer);
+        console.log(`💾 Saved raw batch to ${rawPath}`);
 
-        await logAudioFormat(tempRaw);
+        // Check validity
+        const isValidRaw = await logAudioFormat(rawPath);
+        if (!isValidRaw) {
+          console.warn("⏩ Skipping invalid batch");
+          return;
+        }
 
-        console.log("♻️ Re-encoding audio to clean WebM...");
-        await reencodeAudio(tempRaw, tempOut);
-        console.log(`✅ Re-encoded audio saved to ${tempOut}`);
+        console.log("♻️ Re-encoding...");
+        await reencodeAudio(rawPath, convertedPath);
+        const isValidConv = await logAudioFormat(convertedPath);
+        if (!isValidConv) {
+          console.warn("⏩ Skipping invalid converted batch");
+          return;
+        }
 
-        await logAudioFormat(tempOut);
-
-        console.log("📡 Sending audio to OpenAI Whisper API...");
+        console.log("📡 Sending to Whisper...");
         const transcription = await openai.audio.transcriptions.create({
-          file: fs.createReadStream(tempOut),
+          file: fs.createReadStream(convertedPath),
           model: "whisper-1",
         });
 
         const transcript = transcription.text;
-        console.log("📝 Backend transcription result:", transcript);
+        console.log("📝 Transcript:", transcript);
 
         const accuracy = calculateAccuracy(
           "こんにちは、私の名前はハーシャル・グプタです。元気です。",
@@ -109,25 +108,20 @@ export function startAudioBatchServer(port: number) {
 
         socket.emit("transcription-result", { transcript, accuracy });
       } catch (err) {
-        console.error("❌ Transcription error:", err);
-        socket.emit("error", "Batch transcription failed");
+        console.error("❌ Processing error:", err);
       } finally {
-        for (const file of [tempRaw, tempOut]) {
-          if (fs.existsSync(file)) {
-            await unlinkAsync(file).catch(() =>
-              console.warn(`⚠️ Could not delete temp file: ${file}`)
-            );
-          }
+        for (const f of [rawPath, convertedPath]) {
+          if (fs.existsSync(f)) await unlinkAsync(f);
         }
       }
     });
 
-    socket.on("disconnect", () => {
-      console.log(`❌ Client disconnected: ${socket.id}`);
-    });
+    socket.on("disconnect", () =>
+      console.log(`❌ Client disconnected: ${socket.id}`)
+    );
   });
 
-  httpServer.listen(port, () => {
-    console.log(`🚀 Audio batch server running on port ${port}`);
-  });
+  httpServer.listen(port, () =>
+    console.log(`🚀 Audio batch server running on port ${port}`)
+  );
 }

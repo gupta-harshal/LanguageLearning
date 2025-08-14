@@ -9,6 +9,7 @@ import Dashboard from './pages/Darshboard.tsx'
 import GameCanvas from './pages/AsteroidShooter.tsx'
 import JapaneseScroll from './pages/StorybookReader..tsx'
 import TextToSpeech from './pages/trial.tsx'
+import AudioBatchStreaming from './components/StoryBook/audioComponent.tsx'
 const router= createBrowserRouter([{
   path: '/',
   element: <Home/>,
@@ -20,7 +21,7 @@ const router= createBrowserRouter([{
 }
 ,{
   path :'/trial',
-  element: <TextToSpeech/>,
+  element: <AudioBatchStreaming/>,
   errorElement: <div>404 Not Found</div>,
   
 },

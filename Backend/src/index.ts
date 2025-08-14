@@ -1,6 +1,7 @@
 import express from 'express';
 import router from './routes/index'
 import dotenv from 'dotenv';
+import { startAudioBatchServer } from './apis/audiogen';
 const app= express();
 
 dotenv.config();
@@ -13,3 +14,4 @@ app.get('/', (req, res) => {
 app.listen(3000, () => {
   console.log('Server is running on port 3000');
 });
+startAudioBatchServer(4000);

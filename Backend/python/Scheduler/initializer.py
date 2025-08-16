@@ -37,14 +37,15 @@ def initializeUser ():
     
     words = pd.read_csv("data.csv")
 
-    cards = []
+    cards = {}
 
     for i, word in words.iterrows():
-        cards.append(Card(
+        cards[word["id"]] = Card.to_dict(Card(
             card_id=word["id"],
-            difficulty = word["difficulty"]
+            difficulty = word["difficulty"],
+            stability = 0.6 #Add better logic later
         ))
+        
+    scheduler_dict = Scheduler.to_dict(scheduler)
 
-    print(words)
-
-    return {"scheduler": Scheduler.to_dict(scheduler), "cards": Card.to_dict(cards)}
+    return {"scheduler": Scheduler.to_dict(scheduler), "words": cards}

@@ -1,6 +1,7 @@
 from initializer import initializeUser
 from reviewer import review
 
+
 results = initializeUser()
 
 print(results["scheduler"])
@@ -42,7 +43,7 @@ results = review(results["scheduler"], words=results["words"], results=[
         "time" : 8,
         "submission" : True
     }
-])
+])  
 
 # print(results["scheduler"])
 # print(len(results["words"]))

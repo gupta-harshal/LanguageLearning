@@ -33,27 +33,27 @@ def review(scheduler_input : dict, words : dict, results : list):
         id = result["id"]
         
         # print(type(id))
-        print("")
+        # print("")
         
         if result["submission"] == True:
             if result["clicks"] > 5 or result["time"] > 30:
-                print("Hard")
+                # print("Hard")
                 rating = Rating.Hard
             elif result["clicks"] > 3 or result["time"] > 20:
                 rating = Rating.Good
-                print("Good")
+                # print("Good")
             else:
-                print("Easy")
+                # print("Easy")
                 rating = Rating.Easy
         else:
             rating = Rating.Again
-            print("Again")
+            # print("Again")
             
         
         
         card, review_log = scheduler.review_card(Card.from_dict(words[id]), rating)
         
-        print(card.due - datetime.now(timezone.utc))
+        # print(card.due - datetime.now(timezone.utc))
         
         completedWords.append({
             "id" : id,

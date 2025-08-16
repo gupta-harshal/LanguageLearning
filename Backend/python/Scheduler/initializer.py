@@ -4,6 +4,7 @@ import pandas as pd
 
 def initializeUser ():
         
+    words = pd.read_csv("data.csv")
     scheduler = Scheduler(
             parameters = (
                 0.2172,
@@ -31,11 +32,9 @@ def initializeUser ():
         desired_retention = 0.9,
         learning_steps = (timedelta(minutes=1), timedelta(minutes=10)),
         relearning_steps = (timedelta(minutes=5), timedelta(minutes=10)),
-        maximum_interval = 36500,
+        maximum_interval = words.shape[0] / 6 + 50,
         enable_fuzzing = True,
     )
-    
-    words = pd.read_csv("data.csv")
 
     cards = {}
 
@@ -45,7 +44,5 @@ def initializeUser ():
             difficulty = word["difficulty"],
             stability = 0.6 #Add better logic later
         ))
-        
-    scheduler_dict = Scheduler.to_dict(scheduler)
 
     return {"scheduler": Scheduler.to_dict(scheduler), "words": cards}

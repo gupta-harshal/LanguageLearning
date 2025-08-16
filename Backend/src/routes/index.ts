@@ -7,4 +7,5 @@ const router=Router();
 router.use('/users',authRouter);
 router.use('/',checkRouter);
 router.use('/audio&textcomms',transcriptionRouter);
+router.use('/audio',transcriptionRouter);
 export default router;

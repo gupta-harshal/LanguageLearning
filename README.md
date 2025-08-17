@@ -1,23 +1,26 @@
 # LanguageLearning
 
-LanguageLearning is a project designed to create a **gamified experience** for users to learn Japanese and engage with content in an entertaining way with spaced repition algorithms to make users learn in a effective way.
+**LanguageLearning** is a platform that creates a 🎮 **gamified experience** for mastering Japanese. Combine fun with productivity as you engage with interactive content, spaced repetition algorithms, and AI tools designed to make language learning effective and enjoyable!
 
-## Key Features
+## 🚀 Key Features
 
-- 🎯 **Streaks**: Build daily practice habits and track your learning consistency.
-- 🏅 **Badges & Achievements**: Earn badges and rewards as you reach learning milestones.
-- ⚡ **XP & Level System**: Gain experience points for lessons, quizzes, and other activities.
-- 🗣️ **Text-to-Speech (TTS)**: Hear correct Japanese pronunciation for all learning content.
-- 📝 **Speech-to-Text (STT)**: Practice speaking and get instant feedback on your pronunciation.
-- 🕹️ **Minigames & Challenges**: Make learning fun with interactive challenges.
-- 📈 **Progress Tracking**: Visualize your advancement over time.
-- 👥 **Leaderboards**: Compete with friends and other learners globally.
-- 💡 **Rich Content Library**: Lessons, stories, and quizzes covering beginner to advanced Japanese.
--    **Real Time Chat** : Chat with people in Japanese with AI based suggestions
--    **FlashCards** : Built in Flashcards for Visual and Auditory practices.
--    ** Interactive Story Reading**: Reading stories with narration and interactive scroll UI.
+- 🎯 **Streaks:** Build daily practice habits and track your learning consistency.
+- 🏅 **Badges & Achievements:** Earn badges and rewards as you reach milestones.
+- ⚡ **XP & Level System:** Gain experience points for lessons, quizzes, and challenges.
+- 🗣️ **Text-to-Speech (TTS):** Hear natural Japanese pronunciation for any learning content.
+- 📝 **Speech-to-Text (STT):** Practice speaking and get instant feedback on your pronunciation.
+- 🕹️ **Minigames & Challenges:** Boost retention with interactive games and challenges.
+- 📈 **Progress Tracking:** Visualize your learning progress over time.
+- 👥 **Leaderboards:** Compete with friends and learners globally.
+- 📚 **Rich Content Library:** Access lessons, stories, and quizzes from beginner to advanced.
+- 💬 **Real-Time Chat:** Chat with others in Japanese with AI-powered suggestions.
+- 🃏 **Flashcards:** Master vocabulary via visual and auditory flashcards.
+- 📖 **Interactive Story Reading:** Enjoy narrated stories with a scrollable, interactive UI.
+- ⏰ **Spaced Repetition:** Smart review scheduling for maximum retention.
+- 🤖 **AI-Powered Hints:** Get context-aware hints when you’re stuck.
+- 🎓 **Personalized Learning Paths:** Get content tailored to your skill and goals.
 
-## Getting Started
+## 🛠️ Getting Started
 
 ...
 

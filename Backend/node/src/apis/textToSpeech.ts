@@ -18,7 +18,9 @@ export default async function TTS(req: Request, res: Response) {
       input: text,
       response_format: "mp3",
     });
-
+    if(audio){
+      console.log("Audio generated successfully");
+    }
     res.setHeader("Content-Type", "audio/mpeg");
     res.setHeader("Content-Disposition", 'inline; filename="speech.mp3"');
     res.send(audio);

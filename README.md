@@ -23,6 +23,12 @@
 
 ## App Architecture Prototype
 ![Architecture](LangApp%20Architecture.png)
+
+
+## Prototype Screenshots
+![Home](Home.png)
+![Game1](Game1.png)
+![Game2](Game2.png)
 ## 🛠️ Getting Started
 
 ...

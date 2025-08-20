@@ -20,6 +20,9 @@
 - 🤖 **AI-Powered Hints:** Get context-aware hints when you’re stuck.
 - 🎓 **Personalized Learning Paths:** Get content tailored to your skill and goals.
 
+
+## App Architecture Prototype
+Lang Architecure.png
 ## 🛠️ Getting Started
 
 ...

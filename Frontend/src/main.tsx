@@ -22,7 +22,7 @@ const router= createBrowserRouter([{
 }
 ,{
   path :'/trial',
-  element: <TTSDemo/>,
+  element: <GameCanvas/>,
   errorElement: <div>404 Not Found</div>,
   
 },

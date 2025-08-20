@@ -22,7 +22,8 @@
 
 
 ## App Architecture Prototype
-![Project Architecture](LangApp Architecture.png)
+![Project Architecture](![Project Architecture](LangApp%20Architecture.png)
+)
 ## 🛠️ Getting Started
 
 ...

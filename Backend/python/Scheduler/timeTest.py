@@ -1,5 +1,5 @@
-from initializer import initializeUser
-from reviewer import review
+from utils.initializer import initializeUser
+from utils.reviewer import review
 from datetime import timedelta, datetime
 
 avgInit = 0.0

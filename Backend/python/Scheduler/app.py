@@ -1,5 +1,7 @@
 from initializer import initializeUser
 from reviewer import review
+import time
+from wordSelector import wordSelector
 
 
 results = initializeUser()
@@ -44,6 +46,12 @@ results = review(results["scheduler"], words=results["words"], results=[
         "submission" : True
     }
 ])  
+
+
+# print("Sleeping")
+# time.sleep(60)
+# print("Back Bitches")
+# wordSelector(results["completedWords"], results["words"])
 
 # print(results["scheduler"])
 # print(len(results["words"]))

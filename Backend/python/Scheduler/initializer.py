@@ -1,10 +1,11 @@
 from fsrs import Scheduler, Rating, Card
 from datetime import timedelta
 import pandas as pd
+from data import getWords
 
 def initializeUser ():
         
-    words = pd.read_csv("data.csv")
+    words = getWords()
     scheduler = Scheduler(
             parameters = (
                 0.2172,
@@ -29,10 +30,10 @@ def initializeUser ():
                 0.1437,
                 0.2,
         ),
-        desired_retention = 0.9,
-        learning_steps = (timedelta(minutes=1), timedelta(minutes=10)),
-        relearning_steps = (timedelta(minutes=5), timedelta(minutes=10)),
-        maximum_interval = words.shape[0] / 6 + 50,
+        desired_retention = 0.95,
+        learning_steps = (timedelta(minutes=1), timedelta(minutes=5)),
+        relearning_steps = (timedelta(minutes=5),),
+        maximum_interval = words.shape[0] / 6,
         enable_fuzzing = True,
     )
 

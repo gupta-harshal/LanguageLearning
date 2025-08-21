@@ -20,6 +20,15 @@
 - 🤖 **AI-Powered Hints:** Get context-aware hints when you’re stuck.
 - 🎓 **Personalized Learning Paths:** Get content tailored to your skill and goals.
 
+
+## App Architecture Prototype
+![Architecture](LangApp%20Architecture.png)
+
+
+## Prototype Screenshots
+![Home](Home.png)
+![Game1](Game1.png)
+![Game2](Game2.png)
 ## 🛠️ Getting Started
 
 ...

@@ -1,7 +1,7 @@
-from initializer import initializeUser
-from reviewer import review
+from utils.initializer import initializeUser
+from utils.reviewer import review
 import time
-from wordSelector import wordSelector
+from utils.wordSelector import wordSelector
 
 
 results = initializeUser()

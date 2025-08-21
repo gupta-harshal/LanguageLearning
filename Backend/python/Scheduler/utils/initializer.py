@@ -1,7 +1,7 @@
 from fsrs import Scheduler, Rating, Card
 from datetime import timedelta
 import pandas as pd
-from data import getWords
+from Backend.python.Scheduler.data.data import getWords
 
 def initializeUser ():
         

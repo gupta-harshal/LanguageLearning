@@ -1,6 +1,6 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from fsrs import Scheduler, Card
-from typing import Dict
+from typing import Dict, Annotated, List
 from datetime import datetime
 
 class Completed(BaseModel):
@@ -11,6 +11,7 @@ class Completed(BaseModel):
 class Input(BaseModel):     
     scheduler : Dict
     words : Dict
+    results : Dict
 
     @field_validator("scheduler", mode="after")
     @classmethod
@@ -26,4 +27,7 @@ class Input(BaseModel):
 
     
 class Output(BaseModel):
-    completed : Completed
+    completed : Annotated[List[Completed], Field(title="Dict storing \"id\", \"retrievability\" and \"due\"")]
+    scheduler : Annotated[Dict, Field(title="A Scheduler JSON which can be used to define the scheduler")]
+    words : Annotated[Dict, Field(title="A Card JSON which can be used to define the card")]
+    review_logs : Annotated[Dict, Field(title="A JSON which can be used to define the review_logs", description="To be used to optimize after a data set is collected")]

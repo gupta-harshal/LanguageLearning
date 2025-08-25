@@ -21,19 +21,19 @@ def wordSelector(completed : list, words : dict):
         currIter += 1
         id = frequent_words.iloc[i]["id"]
         if id not in completed_id and id not in resultID:
-            result.append(frequent_words.iloc[i])
+            result.append(frequent_words.iloc[i].to_dict())
             resultID.add(frequent_words.iloc[i]["id"])
 
     for i, row in frequent_words.iterrows():
         if row["id"] in completed_id or row["id"] in resultID:
             continue
         else:
-            result.append(row)
+            result.append(row.to_dict())
             resultID.add(row["id"])
             if len(result) - randomWordsLimit >= newWordsLimit:
                 break
     
-    result.extend([getWordID(x["id"]) for i, x in enumerate(revision) if i < revisionLimit])
+    result.extend([x.to_dict() for i, x in enumerate(revision) if i < revisionLimit])
 
     return result, completed[revisionLimit : ]
 

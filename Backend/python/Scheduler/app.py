@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 import schema.initializer as initializeSchema
 import schema.reviewer as reviewerSchema
 import schema.wordSelector as wordSelectorSchema
+import numpy as np
 
 app = FastAPI()
 
@@ -27,7 +28,17 @@ def review_data(data : reviewerSchema.Input):
 
 @app.post("/getCards", response_model=wordSelectorSchema.Output)
 def getCards(data : wordSelectorSchema.Input):
-    results, completed = wordSelector() 
+    results, completed = wordSelector(data.completed, data.words) 
+
+    for result in results:
+        if type(result["furigana"]) != str:
+            result["furigana"] = ""
+        result["level"] = int(result["level"])
+        result["id"] = int(result["id"])
+        result["difficulty"] = float(result["difficulty"])
+
+        print(result)
+
     res = {
         "result" : results,
         "completed" : completed

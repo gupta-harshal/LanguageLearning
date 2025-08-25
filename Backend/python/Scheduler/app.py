@@ -1,10 +1,9 @@
 from utils.initializer import initializeUser
 from utils.reviewer import review
-import time
 from utils.wordSelector import wordSelector
-import random 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+import schema.initializer as init
 
 app = FastAPI()
 
@@ -16,4 +15,14 @@ def home():
 def healtcheck():
     return JSONResponse(content={"status" : "OK"}, status_code=200)
 
-app.post("/")
+@app.post("/initialize", response_model=init.Output)
+def initialize(data : init.Input):
+    return JSONResponse(content=initializeUser(experience=data.preference.experience, maxTime=data.preference.maximumTime), status_code=200)
+
+@app.post("/review")
+def review():
+    pass
+
+@app.post("/getCards")
+def getCards():
+    pass

@@ -3,7 +3,7 @@ from datetime import timedelta
 import pandas as pd
 from data.data import getWords
 
-def initializeUser ():
+def initializeUser (maxTime : timedelta, experience : int):
         
     words = getWords()
     scheduler = Scheduler(
@@ -31,8 +31,8 @@ def initializeUser ():
                 0.2,
         ),
         desired_retention = 0.95,
-        learning_steps = (timedelta(minutes=1), timedelta(minutes=5)),
-        relearning_steps = (timedelta(minutes=5),),
+        learning_steps = (timedelta(minutes=1), maxTime),
+        relearning_steps = (maxTime,),
         maximum_interval = words.shape[0] / 6,
         enable_fuzzing = True,
     )
@@ -42,7 +42,7 @@ def initializeUser ():
     for i, word in words.iterrows():
         cards[word["id"]] = Card.to_dict(Card(
             card_id=word["id"],
-            difficulty = word["difficulty"],
+            difficulty = max(0, word["difficulty"] - experience * 0.5),
             stability = 0.6 #Add better logic later
         ))
 

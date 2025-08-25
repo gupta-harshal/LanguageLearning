@@ -30,16 +30,17 @@ def review(scheduler_input : dict, words : dict, results : list):
     review_logs = []
     
     for result in results:
-        id = result["id"]
+        print(result)
+        id = result.id
         
         # print(type(id))
         print("\n")
         
-        if result["submission"] == True:
-            if result["clicks"] > 5 or result["time"] > 30:
+        if result.submission == True:
+            if result.clicks > 5 or result.time > 30:
                 print("Hard")
                 rating = Rating.Hard
-            elif result["clicks"] > 3 or result["time"] > 20:
+            elif result.clicks > 3 or result.time > 20:
                 rating = Rating.Good
                 print("Good")
             else:
@@ -59,10 +60,10 @@ def review(scheduler_input : dict, words : dict, results : list):
         completedWords.append({
             "id" : id,
             "retrievability" : scheduler.get_card_retrievability(card=card, current_datetime=card.due),
-            "repeat" : card.due - datetime.now(timezone.utc)
+            "due" : str(card.due)
         })
         
-        review_logs.append(review_log)
+        review_logs.append(review_log.to_dict())
         words[id] = Card.to_dict(card)
         
     # optimizer = Optimizer(review_logs)

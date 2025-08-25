@@ -1,6 +1,6 @@
 from pydantic import BaseModel, field_validator, Field
 from fsrs import Scheduler, Card
-from typing import Dict, Annotated, List
+from typing import Dict, Annotated, List, Optional
 from datetime import datetime
 
 class Completed(BaseModel):
@@ -8,10 +8,24 @@ class Completed(BaseModel):
     retrievability : float
     due : datetime
 
+class Result(BaseModel):
+    id : str
+    clicks : int
+    time : int
+    mouse_movements : Optional[float] = 0.0
+    tab_change : Optional[bool] = False
+    submission : bool
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def idConvertor(cls, value):
+        if type(value) != str:
+            return str(value)
+
 class Input(BaseModel):     
     scheduler : Dict
     words : Dict
-    results : Dict
+    results : List[Result]
 
     
 class Output(BaseModel):

@@ -74,7 +74,7 @@ def review(scheduler_input : dict, words : dict, results : list):
     
     return {
         "scheduler" : Scheduler.to_dict(scheduler),
-        "completed"  : completedWords,
+        "completedWords"  : completedWords,
         "words" : words,
         "review_logs" : review_logs
     }

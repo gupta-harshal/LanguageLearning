@@ -5,11 +5,6 @@ import random
 
 
 def wordSelector(completed : list, words : dict):
-    """
-    Inputs:
-        completed: the dict returned from review, initially []
-        words : the Cards of the user
-    """
     completed_id = {x["id"] for x in completed}
     revision = revisedWordSelector(completed, words)
     result = []
@@ -47,5 +42,5 @@ def findWordsLimit():
     return 4, 2, 6
 
 def revisedWordSelector(completed : list, words : dict):
-    revision = [x for x in completed if Card.from_dict(words[x["id"]]).due <= datetime.now(timezone.utc)]
+    revision = [x for x in completed if Card.from_dict(words[x["id"]]).due < datetime.now(timezone.utc)]
     return revision

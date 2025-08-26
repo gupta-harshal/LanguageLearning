@@ -1,12 +1,9 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Dict, Annotated, List
-from schema.reviewer import Completed
 from fsrs import Card
 
 class Input(BaseModel):
-    completed : Annotated[List[Completed], Field(title="Dict storing \"id\", \"retrievability\" and \"due\"")]
-    words : Annotated[Dict, Field(title="the cards json stored in db")]
-
+    completed : Annotated[List[Dict], Field(title="Dict storing \"id\", \"retrievability\" and \"due\"")]
 
 class Row(BaseModel):
     id : str
@@ -20,4 +17,4 @@ class Row(BaseModel):
 
 class Output(BaseModel):
     result : List[Row]
-    completed : List[Completed] 
+    completed : List[Dict] 

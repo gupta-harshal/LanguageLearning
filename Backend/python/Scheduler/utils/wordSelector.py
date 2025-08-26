@@ -4,9 +4,9 @@ from data.data import getWordsSorted, getWordID
 import random
 
 
-def wordSelector(completed : list, words : dict):
+def wordSelector(completed : list):
     completed_id = {x["id"] for x in completed}
-    revision = revisedWordSelector(completed, words)
+    revision = revisedWordSelector(completed)
     result = []
     resultID = set()
 
@@ -41,6 +41,6 @@ def findWordsLimit():
     # Add some logic based on level and frequency and last accessed and preference
     return 4, 2, 6
 
-def revisedWordSelector(completed : list, words : dict):
-    revision = [x for x in completed if Card.from_dict(words[x["id"]]).due < datetime.now(timezone.utc)]
+def revisedWordSelector(completed : list):
+    revision = [x for x in completed if Card.from_dict(x["id"]).due < datetime.now(timezone.utc)]
     return revision

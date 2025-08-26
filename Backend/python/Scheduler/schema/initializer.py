@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Dict, Annotated, List
 from datetime import timedelta
 
-class _Preference(BaseModel):
+class Preference(BaseModel):
     maximumTime : Annotated[timedelta, Field(title="Maximum time that can be alotted to study in one session")]
     experience : Annotated[int, Field(title="Experiencr in japanese")]
 
@@ -21,9 +21,8 @@ class _Preference(BaseModel):
         raise ValueError("The maximumTime should be an integer and 10 or 15 or 20")
 
 class Input(BaseModel):
-    preference : _Preference
+    preference : Preference
 
 class Output(BaseModel):
     scheduler : Annotated[Dict, Field(title="A Scheduler JSON which can be used to define the scheduler")]
-    words : Annotated[List[Dict], Field(title="A Card JSON which can be used to define the card")]
 

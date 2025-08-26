@@ -11,7 +11,7 @@ def getWords():
         print("Fetching")
         words = pd.read_csv("data/data.csv")
         for i, row in words.iterrows():
-            wordsDict[row["id"]] = row
+            wordsDict[str(row["id"])] = row
     return words
     
 def getWordsSorted(column : str):
@@ -26,7 +26,12 @@ def getWordID(id : str):
     global words
     getWords()
 
-    if id in wordsDict:
+    # print(wordsDict.keys())
+    # print(5808 in wordsDict.keys())
+
+
+    if id in wordsDict.keys():
         return wordsDict[id]
-    raise ValueError("Invalid ID")
+    else:
+        raise ValueError("Invalid ID")
 

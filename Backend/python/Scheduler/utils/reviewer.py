@@ -1,8 +1,8 @@
 from fsrs import Scheduler, Card, ReviewLog, Rating, Optimizer
 from datetime import datetime, timezone
+from data.data import getWordID
 
-
-def review(scheduler_input : dict, words : dict, results : list):
+def review(scheduler_input : dict, completed : dict, results : list, user):
     """
         results: 
         [{
@@ -50,21 +50,30 @@ def review(scheduler_input : dict, words : dict, results : list):
             rating = Rating.Again
             print("Again")
             
-        
-        
-        card, review_log = scheduler.review_card(Card.from_dict(words[id]), rating)
+        print(completed)
+        print(completed.keys())
+        if id not in completed.keys():
+            new_word = getWordID(id=id)
+            new_Card = Card(
+                card_id=new_word["id"],
+                difficulty = max(0, new_word["difficulty"] - user.preferences.experience * 0.5),
+                stability = 0.6 #Add better logic later
+            )
+
+            completed[id] = Card.to_dict(new_Card)
+
+        card, review_log = scheduler.review_card(Card.from_dict(completed[id]), rating)
         
         print(card.due - datetime.now(timezone.utc))
         print(f"Retrievability : {scheduler.get_card_retrievability(card=card, current_datetime=card.due)}")
         
-        completedWords.append({
-            "id" : id,
-            "retrievability" : scheduler.get_card_retrievability(card=card, current_datetime=card.due),
-            "due" : str(card.due)
-        })
+        # completedWords.append({
+        #     "id" : id,
+        #     "retrievability" : scheduler.get_card_retrievability(card=card, current_datetime=card.due),
+        #     "due" : str(card.due)
+        # })
         
         review_logs.append(review_log.to_dict())
-        words[id] = Card.to_dict(card)
         
     # optimizer = Optimizer(review_logs)
     
@@ -75,7 +84,7 @@ def review(scheduler_input : dict, words : dict, results : list):
     
     return {
         "scheduler" : Scheduler.to_dict(scheduler),
-        "completedWords"  : completedWords,
-        "words" : words,
+        # "completedWords"  : completedWords,
+        "completed" : completed,
         "review_logs" : review_logs
     }

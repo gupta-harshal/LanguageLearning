@@ -24,11 +24,11 @@ def initialize(data : initializeSchema.Input):
 
 @app.post("/review", response_model=reviewerSchema.Output)
 def review_data(data : reviewerSchema.Input):
-    return JSONResponse(content=review(data.scheduler, data.words, data.results), status_code=200)
+    return JSONResponse(content=review(data.scheduler, data.completed, data.results, data.user), status_code=200)
 
 @app.post("/getCards", response_model=wordSelectorSchema.Output)
 def getCards(data : wordSelectorSchema.Input):
-    results, completed = wordSelector(data.completed, data.words) 
+    results, completed = wordSelector(data.completed) 
 
     for result in results:
         if type(result["furigana"]) != str:
@@ -36,8 +36,6 @@ def getCards(data : wordSelectorSchema.Input):
         result["level"] = int(result["level"])
         result["id"] = int(result["id"])
         result["difficulty"] = float(result["difficulty"])
-
-        print(result)
 
     res = {
         "result" : results,

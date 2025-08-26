@@ -37,13 +37,13 @@ def initializeUser (maxTime : timedelta, experience : int):
         enable_fuzzing = True,
     )
 
-    cards = {}
+    # cards = {}
 
-    for i, word in words.iterrows():
-        cards[word["id"]] = Card.to_dict(Card(
-            card_id=word["id"],
-            difficulty = max(0, word["difficulty"] - experience * 0.5),
-            stability = 0.6 #Add better logic later
-        ))
+    # for i, word in words.iterrows():
+    #     cards[word["id"]] = Card.to_dict(Card(
+    #         card_id=word["id"],
+    #         difficulty = max(0, word["difficulty"] - experience * 0.5),
+    #         stability = 0.6 #Add better logic later
+    #     ))
 
-    return {"scheduler": Scheduler.to_dict(scheduler), "words": cards}
+    return {"scheduler": Scheduler.to_dict(scheduler)}

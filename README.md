@@ -1,6 +1,6 @@
 # LanguageLearning
 
-**LanguageLearning** is a platform that creates a 🎮 **gamified experience** for mastering Japanese. Combine fun with productivity as you engage with interactive content, spaced repetition algorithms, and AI tools designed to make language learning effective and enjoyable!
+**LanguageLearning** is a platform that creates a 🎮 **gamified experience** for mastering Japanese. Combine fun with productivity as you engage with interactive content, spaced repetition algorithms, and AI tools designed to make language learning effective and enjoyable!!
 
 ## 🚀 Key Features
 

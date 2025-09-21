@@ -1,53 +1,44 @@
-from initializer import initializeUser
-from reviewer import review
+from utils.initializer import initializeUser
+from utils.reviewer import review
+from utils.wordSelector import wordSelector
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+import schema.initializer as initializeSchema
+import schema.reviewer as reviewerSchema
+import schema.wordSelector as wordSelectorSchema
+import numpy as np
 
+app = FastAPI()
 
-results = initializeUser()
+@app.get("/")
+def home():
+    return JSONResponse(content={"message":"Hello World"}, status_code=200)
 
-print(results["scheduler"])
-print(len(results["words"]))
-print(results["words"][1])
+@app.get("/health")
+def healtcheck():
+    return JSONResponse(content={"status" : "OK"}, status_code=200)
 
-print(type(results["scheduler"]))
-print(type(results["words"]))
+@app.post("/initialize", response_model=initializeSchema.Output)
+def initialize(data : initializeSchema.Input):
+    return JSONResponse(content=initializeUser(data.preference.maximumTime, data.preference.experience), status_code=200)
 
-results = review(results["scheduler"], words=results["words"], results=[
-    {
-        "id" : 1,
-        "clicks" : 10,
-        "time" : 23,
-        "submission" : False
-    }, {
-        "id" : 2,
-        "clicks" : 2,
-        "time" : 15,
-        "submission" : True
-    }, {
-        "id" : 3,
-        "clicks" : 2,
-        "time" : 40,
-        "submission" : False
-    }, {
-        "id" : 4,
-        "clicks" : 1,
-        "time" : 10,
-        "submission" : True
-    }, {
-        "id" : 5,
-        "clicks" : 2,
-        "time" : 21,
-        "submission" : True
-    }, {
-        "id" : 6,
-        "clicks" : 6,
-        "time" : 8,
-        "submission" : True
+@app.post("/review", response_model=reviewerSchema.Output)
+def review_data(data : reviewerSchema.Input):
+    return JSONResponse(content=review(data.scheduler, data.completed, data.results, data.user), status_code=200)
+
+@app.post("/getCards", response_model=wordSelectorSchema.Output)
+def getCards(data : wordSelectorSchema.Input):
+    results, completed = wordSelector(data.completed) 
+
+    for result in results:
+        if type(result["furigana"]) != str:
+            result["furigana"] = ""
+        result["level"] = int(result["level"])
+        result["id"] = int(result["id"])
+        result["difficulty"] = float(result["difficulty"])
+
+    res = {
+        "result" : results,
+        "completed" : completed
     }
-])  
-
-# print(results["scheduler"])
-# print(len(results["words"]))
-# print(results["completedWords"])
-
-# print(type(results["scheduler"]))
-# print(type(results["words"]))
+    return JSONResponse(content=res, status_code=200)

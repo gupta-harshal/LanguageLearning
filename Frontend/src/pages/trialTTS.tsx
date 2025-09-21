@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 
 const TTSDemo: React.FC = () => {
-  const [text, setText] = useState("こんにちは、世界！私はAIです。");
+  const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -9,9 +9,9 @@ const TTSDemo: React.FC = () => {
   const handleSend = async () => {
     setError(null);
     setLoading(true);
-
     try {
-      const response = await fetch("https://localhost:3000/api/v1/audio/TTS", {
+      const response = await fetch("http://localhost:3000/api/v1/audio/TTS", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -31,7 +31,7 @@ const TTSDemo: React.FC = () => {
         audioRef.current.src = audioUrl;
         audioRef.current.play();
       }
-    } catch (err) {
+    } catch {
       setError("Failed to fetch TTS audio.");
     } finally {
       setLoading(false);
@@ -48,16 +48,15 @@ const TTSDemo: React.FC = () => {
         onChange={(e) => setText(e.target.value)}
       />
       <button
-        className={`w-full py-2 px-4 rounded text-white font-semibold 
-          ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+        className={`w-full py-2 px-4 rounded text-white font-semibold ${
+          loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+        }`}
         onClick={handleSend}
         disabled={loading}
       >
         {loading ? "生成中..." : "送信して再生"}
       </button>
-      {error && (
-        <p className="mt-2 text-red-600 text-center">{error}</p>
-      )}
+      {error && <p className="mt-2 text-red-600 text-center">{error}</p>}
       <audio ref={audioRef} className="w-full mt-4" controls />
     </div>
   );

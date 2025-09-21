@@ -30,6 +30,26 @@ const router= createBrowserRouter([{
   path : '/dashboard',
   element : <Dashboard/>,
   errorElement: <div>404 Not Found</div>,
+},
+{
+  path : '/game1',
+  element :<CardGame1/>,
+  errorElement: <div>404 Not Found</div>,
+},
+{
+  path : '/game2',
+  element : <GameCanvas/>,
+  errorElement: <div>404 Not Found</div>,
+},
+{
+  path : '/story',
+  element :<JapaneseScroll/>,
+  errorElement: <div>404 Not Found</div>,
+},
+{
+  path : '/TTS',
+  element : <TTSDemo/>,
+  errorElement: <div>404 Not Found</div>,
 }
 ]);
 createRoot(document.getElementById('root')!).render(

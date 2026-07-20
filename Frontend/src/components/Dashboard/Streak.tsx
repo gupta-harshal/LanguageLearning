@@ -137,7 +137,9 @@ export default function Streak() {
   }
 
   return (
-    <div className=" w-full bg-pink-secondary/50 rounded-xl p-4 h-fit flex flex-col gap-5 justify-center items-stretch">
+    <div className="w-full glass-dark rounded-3xl p-6 h-fit flex flex-col gap-6 justify-center items-stretch relative overflow-hidden glow-border">
+      {/* Decorative fire/flame background element for streak */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500 rounded-full mix-blend-screen filter blur-[60px] opacity-20 pointer-events-none"></div>
       {yearDropdownVisible && (
         <ModalPortal hideModal={hideModal}>
           <Dropdown
@@ -160,26 +162,28 @@ export default function Streak() {
           />
         </ModalPortal>
       )}
-      <div className=" flex w-full justify-between items-center">
-        <h1 className=" text-white text-shadow-primary-font-color text-shadow-[3px_2px_2px] font-anglo-japanese text-4xl">
-          Streak
+      <div className="flex w-full justify-between items-center z-10 border-b border-white/10 pb-4">
+        <h1 className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-300 font-anglo-japanese text-4xl flex items-center gap-2">
+          <span className="text-orange-500">🔥</span> Streak
         </h1>
-        <div className=" flex gap-5">
+        <div className="flex gap-4 bg-white/5 p-2 rounded-full border border-white/10 shadow-inner">
           <div
-            className="font-semibold text-white text-shadow-[1px_1px_1px] text-shadow-secondary-font-color cursor-pointer"
+            className="px-4 py-1 rounded-full hover:bg-white/10 transition-colors font-bold text-gray-200 cursor-pointer"
             onClick={handleMonthDropdown}
           >
             {monthOptions.current[selectedMonth].text}
           </div>
           <div
-            className=" cursor-pointer font-semibold text-white text-shadow-[1px_1px_1px] text-shadow-secondary-font-color"
+            className="px-4 py-1 rounded-full hover:bg-white/10 transition-colors font-bold text-gray-200 cursor-pointer"
             onClick={handleYearDropdown}
           >
             {selectedYear}
           </div>
         </div>
       </div>
-      <Calendar month={selectedMonth} year={selectedYear} />
+      <div className="z-10 bg-white/5 rounded-2xl p-4 backdrop-blur-md border border-white/5 shadow-2xl">
+        <Calendar month={selectedMonth} year={selectedYear} />
+      </div>
     </div>
   )
 }

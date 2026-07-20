@@ -9,6 +9,7 @@ import Dashboard from './pages/Darshboard.tsx'
 import GameCanvas from './pages/AsteroidShooter.tsx'
 import JapaneseScroll from './pages/StorybookReader..tsx'
 import TTSDemo from './pages/trialTTS.tsx'
+import { ThemeProvider } from './ThemeContext.tsx'
 const router= createBrowserRouter([{
   path: '/',
   element: <Home/>,
@@ -53,7 +54,9 @@ const router= createBrowserRouter([{
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <RecoilRoot>
-    <RouterProvider router={router} />
+      <ThemeProvider>
+        <RouterProvider router={router} />
+      </ThemeProvider>
     </RecoilRoot>
   </StrictMode>,
 )

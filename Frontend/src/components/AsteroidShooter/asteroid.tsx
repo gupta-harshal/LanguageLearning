@@ -1,91 +1,56 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import asteroidImg from '../../assets/asteroid.png';
 
 interface AsteroidProps {
   id: string;
   text: string;
-  onDestroy: (id: string) => void;
+  startLeft: number;
+  onFallComplete: (id: string) => void;
+  stageHeight: number;
   fallSpeed?: number; // optional: seconds it takes to fall
 }
 
-const Asteroid: React.FC<AsteroidProps> = ({ id, text, onDestroy, fallSpeed = 15 }) => {
-  const [startLeft, setStartLeft] = useState(0);
+const Asteroid = ({
+  id,
+  text,
+  startLeft,
+  onFallComplete,
+  stageHeight,
+  fallSpeed = 15,
+}: AsteroidProps) => {
+  const [isFalling, setIsFalling] = useState(false);
 
   useEffect(() => {
-    const left = Math.random() * (window.innerWidth - 100);
-    setStartLeft(left);
+    const frame = requestAnimationFrame(() => {
+      setIsFalling(true);
+    });
+
+    return () => cancelAnimationFrame(frame);
   }, []);
 
-  const handleAnimationEnd = () => {
-    onDestroy(id);
+  const handleTransitionEnd = () => {
+    onFallComplete(id);
   };
 
   return (
     <div
-      onAnimationEnd={handleAnimationEnd}
+      onTransitionEnd={handleTransitionEnd}
+      className="pointer-events-none absolute z-20 h-24 w-24 transition-[top] ease-linear"
       style={{
-        position: 'absolute',
-        top: '-100px',
+        top: isFalling ? stageHeight - 150 : -100,
         left: `${startLeft}px`,
-        width: '96px',
-        height: '96px',
-        zIndex: 10,
-        animation: `fall ${fallSpeed}s linear forwards`,
-        pointerEvents: 'none',
+        transition: `top ${fallSpeed}s linear`,
       }}
     >
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          animation: 'spin 12s linear infinite',
-        }}
-      >
-        <img
-          src={asteroidImg}
-          alt="asteroid"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-          }}
-        />
-      </div>
+      <img
+        src={asteroidImg}
+        alt="asteroid"
+        className="h-full w-full animate-spin object-contain [animation-duration:10s] [filter:drop-shadow(0_0_12px_rgba(255,201,145,0.4))]"
+      />
 
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%) rotate(0deg)',
-          color: 'white',
-          fontWeight: 'bold',
-          fontSize: '14px',
-          pointerEvents: 'none',
-        }}
-      >
+      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[15px] font-bold text-amber-50 [text-shadow:0_2px_8px_rgba(8,12,24,0.9)]">
         {text}
       </div>
-
-      <style>
-        
-        {`
-          @keyframes fall {
-            from {
-              top: -100px;
-            }
-            to {
-              top: ${window.innerHeight - 150}px;
-              left: ${window.innerWidth / 2 }px;
-              // This line was added to ensure asteroids hits center with jitter 
-            }
-          }
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}
-      </style>
     </div>
   );
 };

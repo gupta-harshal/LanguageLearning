@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Cloud from '../components/FlashCardReading/cloud';
 import Orb from '../components/FlashCardReading/orb';
 import { DndContext } from '@dnd-kit/core';

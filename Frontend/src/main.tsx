@@ -8,8 +8,6 @@ import { RecoilRoot } from 'recoil'
 import Dashboard from './pages/Darshboard.tsx'
 import GameCanvas from './pages/AsteroidShooter.tsx'
 import JapaneseScroll from './pages/StorybookReader..tsx'
-import TextToSpeech from './pages/trial.tsx'
-import AudioBatchStreaming from './components/StoryBook/audioComponent.tsx'
 import TTSDemo from './pages/trialTTS.tsx'
 const router= createBrowserRouter([{
   path: '/',

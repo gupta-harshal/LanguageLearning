@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import woodenImage from '../assets/wooden.png';
 import scrollEnd from '../assets/scroll-end.svg';
 

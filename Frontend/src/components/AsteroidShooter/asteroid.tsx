@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import asteroidImg from '../../assets/asteroid.png';
 
 interface AsteroidProps {
@@ -55,4 +55,4 @@ const Asteroid = ({
   );
 };
 
-export default Asteroid;
+export default React.memo(Asteroid);

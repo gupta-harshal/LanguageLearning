@@ -11,7 +11,6 @@ export default function JapaneseScroll() {
     setTimeout(() => setOpen(true), 800);
   }, []);
 
-  const paperWidthPercent = 75;
   const endHeight = 70;
 
   return (

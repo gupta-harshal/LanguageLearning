@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react"
 import Calendar from "./Calendar"
 import ModalPortal from "../Modals/ModalPortal"
 import Dropdown, { type Option } from "../Modals/Dropdown"
+import { useTheme } from "../../ThemeContext"
 
 export default function Streak() {
+  const { isDarkMode } = useTheme()
   const [monthDropdownVisible, setMonthDropdownVisible] =
     useState<boolean>(false)
   const [yearDropdownVisible, setYearDropdownVisible] = useState<boolean>(false)
@@ -137,7 +139,7 @@ export default function Streak() {
   }
 
   return (
-    <div className="w-full glass-dark rounded-3xl p-6 h-fit flex flex-col gap-6 justify-center items-stretch relative overflow-hidden glow-border">
+    <div className={`${isDarkMode ? "glass-dark" : "glass"} w-full rounded-3xl p-6 h-fit flex flex-col gap-6 justify-center items-stretch relative overflow-hidden glow-border`}>
       {/* Decorative fire/flame background element for streak */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500 rounded-full mix-blend-screen filter blur-[60px] opacity-20 pointer-events-none"></div>
       {yearDropdownVisible && (
@@ -162,26 +164,26 @@ export default function Streak() {
           />
         </ModalPortal>
       )}
-      <div className="flex w-full justify-between items-center z-10 border-b border-white/10 pb-4">
-        <h1 className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-300 font-anglo-japanese text-4xl flex items-center gap-2">
+      <div className={`flex w-full justify-between items-center z-10 border-b pb-4 ${isDarkMode ? "border-white/10" : "border-primary-font-color/10"}`}>
+        <h1 className={`font-anglo-japanese text-4xl flex items-center gap-2 ${isDarkMode ? "text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-300" : "text-primary-font-color"}`}>
           <span className="text-orange-500">🔥</span> Streak
         </h1>
-        <div className="flex gap-4 bg-white/5 p-2 rounded-full border border-white/10 shadow-inner">
+        <div className={`flex gap-4 p-2 rounded-full border shadow-inner ${isDarkMode ? "bg-white/5 border-white/10" : "bg-primary-background/70 border-primary-font-color/10"}`}>
           <div
-            className="px-4 py-1 rounded-full hover:bg-white/10 transition-colors font-bold text-gray-200 cursor-pointer"
+            className={`px-4 py-1 rounded-full transition-colors font-bold cursor-pointer ${isDarkMode ? "hover:bg-white/10 text-gray-200" : "hover:bg-primary-font-color/5 text-primary-font-color"}`}
             onClick={handleMonthDropdown}
           >
             {monthOptions.current[selectedMonth].text}
           </div>
           <div
-            className="px-4 py-1 rounded-full hover:bg-white/10 transition-colors font-bold text-gray-200 cursor-pointer"
+            className={`px-4 py-1 rounded-full transition-colors font-bold cursor-pointer ${isDarkMode ? "hover:bg-white/10 text-gray-200" : "hover:bg-primary-font-color/5 text-primary-font-color"}`}
             onClick={handleYearDropdown}
           >
             {selectedYear}
           </div>
         </div>
       </div>
-      <div className="z-10 bg-white/5 rounded-2xl p-4 backdrop-blur-md border border-white/5 shadow-2xl">
+      <div className={`${isDarkMode ? "bg-white/5 border-white/5" : "bg-primary-background/70 border-primary-font-color/10"} z-10 rounded-2xl p-4 backdrop-blur-md border shadow-2xl`}>
         <Calendar month={selectedMonth} year={selectedYear} />
       </div>
     </div>

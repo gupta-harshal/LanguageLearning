@@ -1,75 +1,17 @@
-import { motion, useMotionValue, useTransform } from "framer-motion"
 import Header from "../components/Header"
 import Button from "../components/Home/Button"
 import PrintingText from "../components/PrintingText"
 import TranslateBox from "../components/TranslateBox"
-import manekiNeko from "../assets/maneki_neko.png"
-import React from "react"
-
-function TiltImage({ src, alt }: { src: string, alt: string }) {
-  const x = useMotionValue(200)
-  const y = useMotionValue(200)
-
-  const rotateX = useTransform(y, [0, 400], [15, -15])
-  const rotateY = useTransform(x, [0, 400], [-15, 15])
-
-  function handleMouse(event: React.MouseEvent<HTMLDivElement, MouseEvent>) {
-    const rect = event.currentTarget.getBoundingClientRect()
-    x.set(event.clientX - rect.left)
-    y.set(event.clientY - rect.top)
-  }
-
-  function handleMouseLeave() {
-    x.set(200)
-    y.set(200)
-  }
-
-  return (
-    <motion.div
-      style={{
-        display: "flex",
-        placeItems: "center",
-        placeContent: "center",
-        width: 400,
-        height: 400,
-        perspective: 800,
-      }}
-      onMouseMove={handleMouse}
-      onMouseLeave={handleMouseLeave}
-    >
-      <motion.img
-        src={src}
-        alt={alt}
-        className="floating"
-        style={{
-          width: 350,
-          height: 350,
-          objectFit: "contain",
-          rotateX,
-          rotateY,
-          filter: "drop-shadow(0 25px 25px rgba(0,0,0,0.4))",
-        }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      />
-    </motion.div>
-  )
-}
+import Spline from "@splinetool/react-spline"
+import { useTheme } from "../ThemeContext"
 
 export default function Home() {
-  const [isDarkMode, setIsDarkMode] = React.useState(true);
+  const { isDarkMode } = useTheme()
 
   return (
-    <main className={`${isDarkMode ? 'dark premium-gradient-bg' : 'light bg-gradient-to-b from-primary-foreground via-white to-primary-button'} min-h-screen text-primary-font-color overflow-x-hidden transition-colors duration-500`}>
-      <div className="absolute top-4 right-4 z-50">
-        <button 
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          className="glass shadow-md px-4 py-2 rounded-full font-bold hover:scale-105 transition-all text-sm"
-        >
-          {isDarkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
-        </button>
-      </div>
+    <main className={`${isDarkMode ? 'dark premium-gradient-bg' : 'light bg-gradient-to-b from-primary-background via-primary-foreground/25 to-primary-button'} min-h-screen text-primary-font-color overflow-x-hidden transition-colors duration-500`}>
       <Header />
-      <section className="min-h-screen flex flex-row justify-center items-center gap-10 lg:gap-32 snap-start px-10">
+      <section className="min-h-screen flex flex-col lg:flex-row justify-center items-center gap-10 lg:gap-24 snap-start px-10 pt-24">
         <div className="flex flex-col gap-10 z-10 max-w-2xl">
           <div className="h-40 lg:h-60">
             <PrintingText
@@ -94,9 +36,14 @@ export default function Home() {
         </div>
         
         {/* 3D Maneki Neko Section */}
-        <div className="hidden lg:flex z-10 relative">
+        <div className="z-10 relative flex items-center justify-center w-full max-w-[440px] h-[520px]">
            <div className="absolute inset-0 bg-pink-500 rounded-full blur-[120px] opacity-20 -z-10 animate-pulse"></div>
-           <TiltImage src={manekiNeko} alt="3D Maneki Neko" />
+           <div className={`relative w-full h-full rounded-[2rem] overflow-hidden border shadow-[0_30px_80px_rgba(0,0,0,0.35)] ${isDarkMode ? "border-white/10 glass-dark" : "border-primary-font-color/10 glass"}`}>
+             <div className="absolute top-4 left-4 z-10 rounded-full bg-black/40 px-3 py-1 text-xs font-bold tracking-widest text-white backdrop-blur-sm">
+               Interactive Maneki Neko
+             </div>
+             <Spline className="w-full h-full" scene="https://prod.spline.design/K2gm9ROX4v8PafQX/scene.splinecode" />
+           </div>
         </div>
       </section>
 

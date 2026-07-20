@@ -27,8 +27,9 @@
     --secondary-background: rgb(255, 242, 211);
     --primary-foreground: rgba(69, 207, 251, 1);
     --secondary-foreground: rgba(105, 237, 236, 1);
-    --primary-font-color: rgb(28, 28, 28);
-    --secondary-font-color: rgb(66, 66, 66);
+    --primary-font-color: rgb(24, 24, 24);
+    --secondary-font-color: rgb(73, 73, 73);
+    color-scheme: light;
   }
 
   .dark {
@@ -37,7 +38,8 @@
     --primary-foreground: rgba(69, 207, 251, 1);
     --secondary-foreground: rgba(105, 237, 236, 1);
     --primary-font-color: rgb(255, 255, 255);
-    --secondary-font-color: rgb(96, 96, 96);
+    --secondary-font-color: rgb(190, 190, 190);
+    color-scheme: dark;
   }
   @font-face {
     font-family: "ango-japanese";
@@ -79,6 +81,18 @@
   --color-pink-primary: var(--pink-primary);
   --color-pink-secondary: var(--pink-secondary);
   --color-pink-tertiary: var(--pink-tertiary);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background: var(--primary-background);
+  color: var(--primary-font-color);
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 
 .writing-mode-vertical {

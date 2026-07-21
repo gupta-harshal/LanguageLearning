@@ -27,17 +27,15 @@ export default function Header() {
     };
 
     return (
-        <header className="absolute top-0 left-0 w-full h-20 z-50 flex items-center justify-between px-6 bg-primary-background/40 backdrop-blur-md shadow-lg border-b border-primary-foreground/10">
-            {/* Logo */}
+        <header className="fixed top-0 left-0 w-full h-16 sm:h-20 z-50 flex items-center justify-between px-4 sm:px-6 bg-primary-background/70 backdrop-blur-md shadow-lg border-b border-primary-foreground/10">
             <div className="flex-shrink-0">
-                <NavLink to="/" className="text-2xl font-anglo-japanese font-bold bg-gradient-to-r from-pink-primary to-blue-primary bg-clip-text text-transparent drop-shadow-sm">
+                <NavLink to="/" className="text-xl sm:text-2xl font-anglo-japanese font-bold bg-gradient-to-r from-pink-primary to-blue-primary bg-clip-text text-transparent drop-shadow-sm">
                     日本語 Lab
                 </NavLink>
             </div>
 
-            <div className="flex items-center gap-4">
-                {/* Desktop Navigation */}
-                <nav className="hidden md:flex items-center space-x-6">
+            <div className="flex items-center gap-2 sm:gap-4">
+                <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
                     {navLinks.map((link) => (
                         <NavLink key={link.path} to={link.path} className={getNavLinkClass}>
                             {({ isActive }) => (
@@ -60,36 +58,32 @@ export default function Header() {
                     <span>{isDarkMode ? '☀️' : '🌙'}</span>
                     <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
                 </button>
+
+                <div className="md:hidden flex items-center">
+                    <button
+                        onClick={toggleTheme}
+                        className="mr-1 inline-flex items-center justify-center rounded-full border border-primary-foreground/15 bg-primary-background/40 p-2 text-primary-font-color shadow-md"
+                        aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                    >
+                        {isDarkMode ? '☀️' : '🌙'}
+                    </button>
+                    <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className="text-primary-foreground hover:text-pink-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-pink-primary rounded-md p-2 transition-colors relative w-10 h-10 flex items-center justify-center"
+                        aria-expanded={isMobileMenuOpen}
+                    >
+                        <span className="sr-only">Open main menu</span>
+                        <svg className={`absolute h-6 w-6 transition-transform duration-300 ${isMobileMenuOpen ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg className={`absolute h-6 w-6 transition-transform duration-300 ${isMobileMenuOpen ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
-            {/* Mobile Menu Button */}
-            <div className="md:hidden flex items-center">
-                <button
-                    onClick={toggleTheme}
-                    className="mr-2 inline-flex items-center justify-center rounded-full border border-primary-foreground/15 bg-primary-background/40 p-2 text-primary-font-color shadow-md"
-                    aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                >
-                    {isDarkMode ? '☀️' : '🌙'}
-                </button>
-                <button
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    className="text-primary-foreground hover:text-pink-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-pink-primary rounded-md p-2 transition-colors relative w-10 h-10 flex items-center justify-center"
-                    aria-expanded={isMobileMenuOpen}
-                >
-                    <span className="sr-only">Open main menu</span>
-                    {/* Hamburger Icon */}
-                    <svg className={`absolute h-6 w-6 transition-transform duration-300 ${isMobileMenuOpen ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                    {/* Close Icon */}
-                    <svg className={`absolute h-6 w-6 transition-transform duration-300 ${isMobileMenuOpen ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
-            {/* Mobile Dropdown Navigation */}
-            <div className={`absolute top-20 left-0 w-full bg-primary-background/95 backdrop-blur-xl border-b border-primary-foreground/10 shadow-xl overflow-hidden transition-all duration-300 origin-top ${
+            <div className={`absolute top-16 sm:top-20 left-0 w-full bg-primary-background/95 backdrop-blur-xl border-b border-primary-foreground/10 shadow-xl overflow-hidden transition-all duration-300 origin-top ${
                 isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
             } md:hidden`}>
                 <nav className="flex flex-col py-2">

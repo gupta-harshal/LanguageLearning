@@ -1,11 +1,12 @@
-import { useRecoilState } from "recoil";
-import { score } from "../../atoms/flashcardreading/score";
+import { useRecoilValue } from "recoil"
+import { score } from "../../atoms/flashcardreading/score"
 
 export default function Score() {
-    const [Score]= useRecoilState(score);
+  const value = useRecoilValue(score)
   return (
-    <div className="relative z-10 font-anglo-japan text-white text-4xl font-semibold whitespace-nowrap">
-      Score: {Score}
+    <div className="relative z-10 font-anglo-japanese text-white text-lg sm:text-2xl font-semibold whitespace-nowrap">
+      {value}
+      <span className="ml-1 text-xs sm:text-sm font-sans opacity-80">pts</span>
     </div>
-  );
+  )
 }

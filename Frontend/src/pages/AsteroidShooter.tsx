@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import Asteroid from '../components/AsteroidShooter/asteroid';
 import Laser from '../components/AsteroidShooter/laser';
 import Spaceship from '../components/AsteroidShooter/spaceship';
@@ -209,11 +210,20 @@ const GameCanvas = () => {
       />
 
       <div className="absolute left-1/2 top-3 z-40 flex w-[min(920px,94vw)] -translate-x-1/2 items-center justify-between gap-3 rounded-[14px] border border-blue-300/35 bg-gradient-to-b from-[#070e1ec7] to-[#040918f0] px-3.5 py-2.5 shadow-[0_12px_30px_rgba(0,4,16,0.55),inset_0_1px_0_rgba(151,199,255,0.12)] backdrop-blur-[10px] max-[720px]:w-[96vw] max-[720px]:flex-col max-[720px]:items-start max-[720px]:gap-2 max-[720px]:rounded-xl max-[720px]:px-2.5 max-[720px]:py-2">
-        <div className="grid gap-1">
-          <p className="m-0 text-[11px] uppercase tracking-[0.18em] text-sky-200/80">Typing Defense</p>
-          <h1 className="m-0 text-[clamp(15px,2vw,20px)] tracking-[0.04em] text-slate-100 [text-shadow:0_2px_12px_rgba(67,149,255,0.35)]">
-            Orbital Kana Assault
-          </h1>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/dashboard"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-sky-300/40 bg-[#040a19bf] text-lg text-slate-100 hover:bg-sky-500/20"
+            aria-label="Back to dashboard"
+          >
+            ←
+          </Link>
+          <div className="grid gap-1">
+            <p className="m-0 text-[11px] uppercase tracking-[0.18em] text-sky-200/80">Typing Defense</p>
+            <h1 className="m-0 text-[clamp(15px,2vw,20px)] tracking-[0.04em] text-slate-100 [text-shadow:0_2px_12px_rgba(67,149,255,0.35)]">
+              Orbital Kana Assault
+            </h1>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 rounded-full border border-blue-300/35 bg-[#040a19bf] px-2.5 py-1.5 max-[720px]:w-full max-[720px]:justify-between">

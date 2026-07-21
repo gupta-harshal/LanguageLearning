@@ -1,9 +1,11 @@
-import { JwtPayload } from '../utils/jwt'; // adjust based on your project structure
+import type { AuthUser } from './utils/jwt';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: JwtPayload; // your payload structure (userId, jti, etc.)
+      user?: AuthUser; // { id, jti } set by authenticate middleware
     }
   }
 }
+
+export {};

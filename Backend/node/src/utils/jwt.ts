@@ -3,6 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
+// Shape attached to req.user by the authenticate middleware.
+export type AuthUser = { id: string; jti: string };
+
 export function generateToken(userId: string) {
   const jti = uuidv4();
   const token = jwt.sign({ userId, jti }, JWT_SECRET, { expiresIn: '7d' });

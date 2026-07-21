@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import woodenImage from '../assets/wooden.png';
 import scrollEnd from '../assets/scroll-end.svg';
@@ -18,6 +19,12 @@ export default function JapaneseScroll() {
       className="min-h-screen bg-cover bg-center bg-no-repeat flex flex-col items-center justify-start py-12 relative overflow-hidden"
       style={{ backgroundImage: `url(${woodenImage})` }}
     >
+      <Link
+        to="/dashboard"
+        className="fixed top-4 left-4 z-50 flex h-10 items-center gap-2 rounded-full bg-[#4a2e15]/90 px-4 text-sm font-bold text-[#fdf5e6] shadow-lg backdrop-blur-sm hover:scale-105 transition-transform"
+      >
+        ← Dashboard
+      </Link>
       {/* Ambient glowing dust/magic particles */}
       <div className="absolute inset-0 pointer-events-none z-0 opacity-40 mix-blend-screen bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-100 via-transparent to-transparent"></div>
 

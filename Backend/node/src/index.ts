@@ -38,8 +38,15 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use(Sentry.expressErrorHandler());
 
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+const PORT = Number(process.env.PORT) || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
 
-startAudioBatchServer(4000);
+// Socket.io audio server — only start locally / when AUDIO_PORT is set.
+// Render free/web services expose a single HTTP port; skip the second listener in production.
+const audioPort = process.env.AUDIO_PORT ? Number(process.env.AUDIO_PORT) : process.env.NODE_ENV === 'production' ? null : 4000;
+if (audioPort) {
+  startAudioBatchServer(audioPort);
+}

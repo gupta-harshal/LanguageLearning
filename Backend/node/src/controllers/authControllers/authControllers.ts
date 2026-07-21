@@ -42,7 +42,14 @@ export const login = async (req: Request, res: Response) => {
   }
 
   const { token, jti } = generateToken(user.id);
-  await redis.set(`session:${user.id}:${jti}`, JSON.stringify({ createdAt: new Date().toISOString() }));
+  await redis.set(
+    `session:${user.id}:${jti}`,
+    JSON.stringify({
+      createdAt: new Date().toISOString(),
+      deviceUserAgent: req.headers['user-agent'] || 'unknown',
+      ipAddress: req.ip || req.socket.remoteAddress || 'unknown',
+    }),
+  );
 
   res.json({ token });
 };

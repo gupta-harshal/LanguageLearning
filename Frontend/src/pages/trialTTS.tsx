@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { apiBlob, ApiError } from "../api/client";
 
 const TTSDemo: React.FC = () => {
   const [text, setText] = useState("");
@@ -10,29 +11,19 @@ const TTSDemo: React.FC = () => {
     setError(null);
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/api/v1/audio/TTS", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text }),
-      });
-
-      if (!response.ok) {
-        setError("TTS backend error!");
-        setLoading(false);
-        return;
-      }
-
-      const audioBlob = await response.blob();
+      const audioBlob = await apiBlob("/audio/TTS", { text });
       const audioUrl = URL.createObjectURL(audioBlob);
 
       if (audioRef.current) {
         audioRef.current.src = audioUrl;
         audioRef.current.play();
       }
-    } catch {
-      setError("Failed to fetch TTS audio.");
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        setError("Please sign in to use the TTS feature.");
+      } else {
+        setError("Failed to fetch TTS audio.");
+      }
     } finally {
       setLoading(false);
     }

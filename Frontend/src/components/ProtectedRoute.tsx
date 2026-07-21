@@ -2,7 +2,38 @@ import type { ReactNode } from "react"
 import { Navigate, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 
-export default function ProtectedRoute({ children }: { children: ReactNode }) {
+const DEMO_KEY = "demoPlays"
+/** Guests get this many game/feature opens before login is required. */
+const DEMO_LIMIT = 2
+
+function getDemoPlays(): number {
+  try {
+    return Number(localStorage.getItem(DEMO_KEY) || "0") || 0
+  } catch {
+    return 0
+  }
+}
+
+function bumpDemoPlays() {
+  try {
+    localStorage.setItem(DEMO_KEY, String(getDemoPlays() + 1))
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Protects routes. Logged-in users pass through.
+ * Guests get a tiny demo allowance (DEMO_LIMIT opens), then must sign in.
+ * Set `strict` to skip the demo allowance (account / TTS / etc).
+ */
+export default function ProtectedRoute({
+  children,
+  strict = false,
+}: {
+  children: ReactNode
+  strict?: boolean
+}) {
   const { isAuthenticated, loading } = useAuth()
   const location = useLocation()
 
@@ -17,9 +48,15 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  if (isAuthenticated) return <>{children}</>
+
+  if (!strict) {
+    const plays = getDemoPlays()
+    if (plays < DEMO_LIMIT) {
+      bumpDemoPlays()
+      return <>{children}</>
+    }
   }
 
-  return <>{children}</>
+  return <Navigate to="/login" replace state={{ from: location.pathname }} />
 }

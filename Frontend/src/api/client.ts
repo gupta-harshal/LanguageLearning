@@ -3,7 +3,10 @@
 
 export const API_URL =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
-  "http://localhost:3000/api/v1"
+  (import.meta.env.PROD
+    ? "https://languagelearning-55vm.onrender.com/api/v1"
+    : "http://localhost:3000/api/v1")
+
 
 const TOKEN_KEY = "authToken"
 
@@ -75,7 +78,14 @@ export async function apiBlob(path: string, body: unknown): Promise<Blob> {
   })
   if (!res.ok) {
     if (res.status === 401) clearToken()
-    throw new ApiError(res.status, "Request failed")
+    let message = "Request failed"
+    try {
+      const data = await res.json()
+      if (data?.message || data?.error) message = String(data.message || data.error)
+    } catch {
+      if (res.status === 429) message = "Daily limit reached. Try again tomorrow."
+    }
+    throw new ApiError(res.status, message)
   }
   return res.blob()
 }

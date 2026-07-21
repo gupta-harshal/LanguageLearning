@@ -16,20 +16,22 @@ import ProtectedRoute from './components/ProtectedRoute.tsx'
 import { ThemeProvider } from './ThemeContext.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
 
-const protect = (element: React.ReactNode) => <ProtectedRoute>{element}</ProtectedRoute>
+function protect(element: React.ReactNode, strict = false) {
+  return <ProtectedRoute strict={strict}>{element}</ProtectedRoute>
+}
 
 const router = createBrowserRouter([
   { path: '/', element: <Home />, errorElement: <div>404 Not Found</div> },
   { path: '/login', element: <Login />, errorElement: <div>404 Not Found</div> },
   { path: '/signup', element: <Signup />, errorElement: <div>404 Not Found</div> },
-  { path: '/account', element: protect(<Account />), errorElement: <div>404 Not Found</div> },
+  { path: '/account', element: protect(<Account />, true), errorElement: <div>404 Not Found</div> },
   { path: '/cardgame1', element: protect(<CardGame1 />), errorElement: <div>404 Not Found</div> },
   { path: '/trial', element: protect(<GameCanvas />), errorElement: <div>404 Not Found</div> },
   { path: '/dashboard', element: protect(<Dashboard />), errorElement: <div>404 Not Found</div> },
   { path: '/game1', element: protect(<CardGame1 />), errorElement: <div>404 Not Found</div> },
   { path: '/game2', element: protect(<GameCanvas />), errorElement: <div>404 Not Found</div> },
   { path: '/story', element: protect(<JapaneseScroll />), errorElement: <div>404 Not Found</div> },
-  { path: '/TTS', element: protect(<TTSDemo />), errorElement: <div>404 Not Found</div> },
+  { path: '/TTS', element: protect(<TTSDemo />, true), errorElement: <div>404 Not Found</div> },
 ])
 
 createRoot(document.getElementById('root')!).render(

@@ -1,6 +1,8 @@
 import { Router } from "express";
 import grammarEngine from "../apis/GrammarEngine";
 import { authenticate } from "../middlewares/authentication";
-const checkRouter= Router();
-checkRouter.post('/check',authenticate,grammarEngine);
+import { checkUserLimit } from "../middlewares/rateLimit";
+
+const checkRouter = Router();
+checkRouter.post('/check', authenticate, checkUserLimit, grammarEngine);
 export default checkRouter;

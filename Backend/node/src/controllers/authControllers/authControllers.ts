@@ -2,7 +2,12 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 import { generateToken, verifyToken } from '../../utils/jwt';
-import { redis } from '../../utils/redis';
+import {
+  createSession,
+  deleteOtherSessions,
+  deleteSession,
+  listSessions,
+} from '../../utils/sessions';
 
 const prisma = new PrismaClient();
 
@@ -12,44 +17,55 @@ export const signup = async (req: Request, res: Response) => {
   if (!name || !email || !password) {
     return res.status(400).json({ message: 'Name, email and password are required' });
   }
-  
-  const hashedPassword = await bcrypt.hash(password, 10);
 
-  const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      password: hashedPassword,
-    },
-  });
+  if (typeof password !== 'string' || password.length < 6) {
+    return res.status(400).json({ message: 'Password must be at least 6 characters' });
+  }
 
-  const { token, jti } = generateToken(user.id);
-  await redis.set(
-    `session:${user.id}:${jti}`,
-    JSON.stringify({ createdAt: new Date().toISOString(),deviceUserAgent: req.headers['user-agent'] || 'unknown',
-  ipAddress: req.ip || req.socket.remoteAddress || 'unknown' }),
-  );
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  res.json({ token });
+    const user = await prisma.user.create({
+      data: {
+        name: String(name).slice(0, 80),
+        email: String(email).toLowerCase().trim().slice(0, 120),
+        password: hashedPassword,
+      },
+    });
+
+    const { token, jti } = generateToken(user.id);
+    await createSession(user.id, jti, {
+      createdAt: new Date().toISOString(),
+      deviceUserAgent: String(req.headers['user-agent'] || 'unknown').slice(0, 200),
+      ipAddress: req.ip || req.socket.remoteAddress || 'unknown',
+    });
+
+    res.json({ token });
+  } catch (err: unknown) {
+    // Prisma unique constraint (duplicate email)
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002') {
+      return res.status(409).json({ message: 'Email already registered' });
+    }
+    throw err;
+  }
 };
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !(await bcrypt.compare(password, user.password))) {
+  const user = await prisma.user.findUnique({
+    where: { email: String(email || '').toLowerCase().trim() },
+  });
+  if (!user || !(await bcrypt.compare(String(password || ''), user.password))) {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
 
   const { token, jti } = generateToken(user.id);
-  await redis.set(
-    `session:${user.id}:${jti}`,
-    JSON.stringify({
-      createdAt: new Date().toISOString(),
-      deviceUserAgent: req.headers['user-agent'] || 'unknown',
-      ipAddress: req.ip || req.socket.remoteAddress || 'unknown',
-    }),
-  );
+  await createSession(user.id, jti, {
+    createdAt: new Date().toISOString(),
+    deviceUserAgent: String(req.headers['user-agent'] || 'unknown').slice(0, 200),
+    ipAddress: req.ip || req.socket.remoteAddress || 'unknown',
+  });
 
   res.json({ token });
 };
@@ -59,17 +75,14 @@ export const logout = async (req: Request, res: Response) => {
   if (!token) return res.status(400).json({ message: 'No token provided' });
 
   const { userId, jti } = verifyToken(token);
-  await redis.del(`session:${userId}:${jti}`);
+  await deleteSession(userId, jti);
 
   res.json({ message: 'Logged out' });
 };
 
 export const sessions = async (req: Request, res: Response) => {
   const userId = req.user!.id;
-
-  const keys = await redis.keys(`session:${userId}:*`);
-  const allSessions = await Promise.all(keys.map(key => redis.get(key)));
-
+  const allSessions = await listSessions(userId);
   res.json({ sessions: allSessions });
 };
 
@@ -78,10 +91,7 @@ export const logoutOthers = async (req: Request, res: Response) => {
   if (!token) return res.status(400).json({ message: 'No token provided' });
 
   const { userId, jti: currentJti } = verifyToken(token);
-
-  const keys = await redis.keys(`session:${userId}:*`);
-  const otherSessions = keys.filter(key => !key.endsWith(currentJti));
-  await Promise.all(otherSessions.map(key => redis.del(key)));
+  await deleteOtherSessions(userId, currentJti);
 
   res.json({ message: 'Other sessions logged out' });
 };

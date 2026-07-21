@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt';
-import { redis } from '../utils/redis';
+import { getSession } from '../utils/sessions';
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split(' ')[1];
@@ -8,12 +8,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
   try {
     const { userId, jti } = verifyToken(token);
-    const session = await redis.get(`session:${userId}:${jti}`);
+    const session = await getSession(userId, jti);
     if (!session) return res.status(401).json({ message: 'Session expired or invalid' });
 
     req.user = { id: userId, jti };
     next();
-  } catch (err) {
+  } catch {
     res.status(401).json({ message: 'Invalid token' });
   }
 };

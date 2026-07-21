@@ -21,6 +21,10 @@ const TTSDemo: React.FC = () => {
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         setError("Please sign in to use the TTS feature.");
+      } else if (err instanceof ApiError && err.status === 429) {
+        setError(err.message || "Daily TTS limit reached. Try again tomorrow.");
+      } else if (err instanceof ApiError) {
+        setError(err.message);
       } else {
         setError("Failed to fetch TTS audio.");
       }

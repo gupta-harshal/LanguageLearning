@@ -10,7 +10,13 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors()); 
+const frontendOrigin = process.env.FRONTEND_URL; // e.g. https://your-app.vercel.app
+app.use(
+  cors({
+    origin: frontendOrigin ? [frontendOrigin, 'http://localhost:5173', 'http://localhost:5175'] : true,
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use('/api/v1', router);

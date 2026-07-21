@@ -24,7 +24,6 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.1.0",
     "@types/socket.io": "^3.0.1",
-    "prisma": "^6.12.0",
     "rimraf": "^6.0.1",
     "ts-add-js-extension": "^1.6.6",
     "ts-node": "^10.9.2",
@@ -46,10 +45,13 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "openai": "^5.12.2",
+    "prisma": "^6.12.0",
     "socket.io": "^4.8.1",
     "uuid": "^11.1.0",
     "vox": "^0.0.0"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.9",
-    "utf-8-validate":
+    "utf-8-validate": "^6.0.5"
+  }
+}

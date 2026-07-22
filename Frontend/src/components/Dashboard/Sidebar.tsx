@@ -10,9 +10,12 @@ type NavItem = {
 const majorItems: NavItem[] = [
   { name: "Home", route: "/", icon: "🏠" },
   { name: "Continue", route: "/dashboard", icon: "▶️" },
+  { name: "Daily Quests", route: "/quests", icon: "⭐" },
   { name: "SRS Deck", route: "/srs", icon: "🧠" },
   { name: "Talk with ミケ", route: "/talk", icon: "📞" },
+  { name: "Listening", route: "/listen", icon: "🎧" },
   { name: "Chat Room", route: "/chat", icon: "💬" },
+  { name: "Vocab Journal", route: "/journal", icon: "📓" },
   { name: "Cloud Game", route: "/game1", icon: "☁️" },
   { name: "Space Shooter", route: "/game2", icon: "🚀" },
   { name: "Storybook", route: "/story", icon: "📖" },

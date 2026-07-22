@@ -2,10 +2,16 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import Streak from "../components/Dashboard/Streak"
 import Sidebar from "../components/Dashboard/Sidebar"
+import LevelTracker from "../components/Dashboard/LevelTracker"
 import { useTheme } from "../ThemeContext"
 import { useAuth } from "../context/AuthContext"
 
 const questCards = [
+  {
+    title: "Daily Quests",
+    body: "Hit today’s XP goal — badges await.",
+    to: "/quests",
+  },
   {
     title: "SRS Deck",
     body: "Spaced repetition — the core of long-term memory.",
@@ -17,12 +23,22 @@ const questCards = [
     to: "/talk",
   },
   {
+    title: "Listening Cloze",
+    body: "Hear a sentence, fill the missing word.",
+    to: "/listen",
+  },
+  {
     title: "Chat Room",
     body: "Type romaji or Japanese with learners + Gemini coach.",
     to: "/chat",
   },
   {
-    title: "Vocabulary",
+    title: "Vocab Journal",
+    body: "Save words you want to remember forever.",
+    to: "/journal",
+  },
+  {
+    title: "Vocabulary Game",
     body: "Review words in the cloud matching game.",
     to: "/game1",
   },
@@ -30,11 +46,6 @@ const questCards = [
     title: "Space Practice",
     body: "Blast asteroids and reinforce kanji recall.",
     to: "/game2",
-  },
-  {
-    title: "Storybook",
-    body: "Read folktales side by side.",
-    to: "/story",
   },
 ]
 
@@ -133,8 +144,9 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <section className="p-4 sm:p-6 lg:p-8 w-full lg:w-[380px] xl:w-[420px] flex items-stretch justify-start z-30 shrink-0">
+        <section className="p-4 sm:p-6 lg:p-8 w-full lg:w-[380px] xl:w-[420px] flex flex-col gap-4 sm:gap-6 items-stretch justify-start z-30 shrink-0">
           <Streak />
+          <LevelTracker />
         </section>
       </main>
     </div>

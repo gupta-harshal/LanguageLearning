@@ -2,11 +2,13 @@ import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import type { SessionInfo } from "../context/AuthContext"
+import { api } from "../api/client"
 
 export default function Account() {
-  const { user, logout, logoutOthers, fetchSessions } = useAuth()
+  const { user, stats, logout, logoutOthers, fetchSessions } = useAuth()
   const navigate = useNavigate()
   const [sessions, setSessions] = useState<SessionInfo[]>([])
+  const [maxDevices, setMaxDevices] = useState(3)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
@@ -14,9 +16,17 @@ export default function Account() {
   const load = async () => {
     setLoading(true)
     try {
-      setSessions(await fetchSessions())
+      const data = await api<{ sessions: SessionInfo[]; maxDevices: number; active: number }>(
+        "/users/sessions"
+      )
+      setSessions(data.sessions || [])
+      setMaxDevices(data.maxDevices || 3)
     } catch {
-      setNote("Could not load sessions.")
+      try {
+        setSessions(await fetchSessions())
+      } catch {
+        setNote("Could not load sessions.")
+      }
     } finally {
       setLoading(false)
     }
@@ -37,7 +47,7 @@ export default function Account() {
     setNote(null)
     try {
       await logoutOthers()
-      setNote("Signed out of all other devices.")
+      setNote("Signed out of all other devices. Only this one remains.")
       await load()
     } catch {
       setNote("Could not sign out other devices.")
@@ -57,7 +67,6 @@ export default function Account() {
           <div className="w-10" />
         </div>
 
-        {/* Profile card */}
         <section className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-500 to-indigo-500 text-2xl font-bold">
@@ -66,13 +75,15 @@ export default function Account() {
             <div>
               <p className="text-xl font-semibold">{user?.name}</p>
               <p className="text-white/60 text-sm">{user?.email}</p>
+              <p className="text-xs text-white/45 mt-1">
+                Lv {stats?.level ?? 1} · {stats?.xp ?? 0} XP · 🔥 {stats?.streak ?? 0}d
+              </p>
             </div>
           </div>
         </section>
 
-        {/* Devices */}
         <section className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-2 flex items-center justify-between gap-2">
             <h2 className="font-anglo-japanese text-xl">Active devices</h2>
             <button
               type="button"
@@ -83,6 +94,11 @@ export default function Account() {
               Sign out others
             </button>
           </div>
+          <p className="mb-4 text-xs text-white/50">
+            Max <span className="text-pink-300 font-semibold">{maxDevices}</span> devices at once.
+            You are using <span className="text-white font-semibold">{sessions.length}/{maxDevices}</span>.
+            Signing in on a 4th device signs out the oldest one.
+          </p>
 
           {note && <p className="mb-3 text-sm text-white/70">{note}</p>}
 
@@ -93,11 +109,20 @@ export default function Account() {
           ) : (
             <ul className="flex flex-col gap-3">
               {sessions.map((s, i) => (
-                <li key={i} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                <li
+                  key={s.jti || i}
+                  className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${
+                    s.current ? "border-pink-400/50 bg-pink-500/10" : "border-white/10 bg-white/5"
+                  }`}
+                >
                   <span className="text-xl">💻</span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm">{s.deviceUserAgent || "Unknown device"}</p>
-                    <p className="text-xs text-white/50">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {s.label || "Device"}
+                      {s.current ? " · this device" : ""}
+                    </p>
+                    <p className="truncate text-xs text-white/45">{s.deviceUserAgent || "Unknown UA"}</p>
+                    <p className="text-xs text-white/40">
                       {s.ipAddress ? `${s.ipAddress} · ` : ""}
                       {s.createdAt ? new Date(s.createdAt).toLocaleString() : "active"}
                     </p>

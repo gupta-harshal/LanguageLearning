@@ -15,6 +15,7 @@ const srsLimit = rateLimit({
 });
 
 srsRouter.get('/overview', authenticate, srsController.overview);
+srsRouter.get('/progress', authenticate, srsController.progress);
 srsRouter.post('/bootstrap', authenticate, srsLimit, srsController.bootstrap);
 srsRouter.get('/cards', authenticate, srsLimit, srsController.cards);
 srsRouter.post('/review', authenticate, srsLimit, srsController.review);

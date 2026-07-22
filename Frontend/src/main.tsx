@@ -15,6 +15,9 @@ import Account from './pages/Account.tsx'
 import TalkPractice from './pages/TalkPractice.tsx'
 import SrsStudy from './pages/SrsStudy.tsx'
 import ChatRoom from './pages/ChatRoom.tsx'
+import DailyQuests from './pages/DailyQuests.tsx'
+import VocabJournal from './pages/VocabJournal.tsx'
+import ListenPractice from './pages/ListenPractice.tsx'
 import ProtectedRoute from './components/ProtectedRoute.tsx'
 import { ThemeProvider } from './ThemeContext.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
@@ -38,6 +41,9 @@ const router = createBrowserRouter([
   { path: '/talk', element: protect(<TalkPractice />, true), errorElement: <div>404 Not Found</div> },
   { path: '/srs', element: protect(<SrsStudy />, true), errorElement: <div>404 Not Found</div> },
   { path: '/chat', element: protect(<ChatRoom />, true), errorElement: <div>404 Not Found</div> },
+  { path: '/quests', element: protect(<DailyQuests />, true), errorElement: <div>404 Not Found</div> },
+  { path: '/journal', element: protect(<VocabJournal />, true), errorElement: <div>404 Not Found</div> },
+  { path: '/listen', element: protect(<ListenPractice />, true), errorElement: <div>404 Not Found</div> },
 ])
 
 createRoot(document.getElementById('root')!).render(

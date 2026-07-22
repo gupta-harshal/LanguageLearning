@@ -4,6 +4,17 @@ import Asteroid from '../components/AsteroidShooter/asteroid';
 import Laser from '../components/AsteroidShooter/laser';
 import Spaceship from '../components/AsteroidShooter/spaceship';
 import EngToJap from '../components/engtoJap';
+import { api } from '../api/client';
+
+/** Timed recall under pressure — game2 has its own SRS/XP weighting on the backend. */
+function awardGameXp(xpGained: number) {
+  void api('/srs/ping', {
+    method: 'POST',
+    body: { xpGained, source: 'game2' },
+  }).catch(() => {
+    /* offline / unauthenticated demo — ignore */
+  });
+}
 
 interface AsteroidType {
   id: string;
@@ -132,6 +143,7 @@ const GameCanvas = () => {
         }, 400);
 
         setScore(s => s + 100);
+        awardGameXp(6);
         return prevAsteroids.filter(a => a.id !== match.id);
       }
       return prevAsteroids;

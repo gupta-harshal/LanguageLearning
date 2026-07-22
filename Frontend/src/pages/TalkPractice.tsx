@@ -59,8 +59,24 @@ function getSpeechRecognition(): (new () => SpeechRec) | null {
   return w.SpeechRecognition || w.webkitSpeechRecognition || null
 }
 
+/** Rough Japanese similarity for shadowing feedback (0–100). */
+function shadowAccuracy(expected: string, heard: string): number {
+  const a = expected.replace(/\s+/g, "")
+  const b = heard.replace(/\s+/g, "")
+  if (!a || !b) return 0
+  if (a === b) return 100
+  let hits = 0
+  const len = Math.max(a.length, b.length)
+  for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    if (a[i] === b[i]) hits++
+  }
+  // also reward substring containment
+  if (a.includes(b) || b.includes(a)) hits = Math.max(hits, Math.floor(len * 0.7))
+  return Math.round((hits / len) * 100)
+}
+
 export default function TalkPractice() {
-  const { isAuthenticated } = useAuth()
+  const { refreshStats } = useAuth()
   const [level, setLevel] = useState<Level>("beginner")
   const [scenario, setScenario] = useState<Scenario>("daily")
   const [keigo, setKeigo] = useState(false)
@@ -70,6 +86,8 @@ export default function TalkPractice() {
   const [bubbles, setBubbles] = useState<Bubble[]>([])
   const [tip, setTip] = useState("Hold the mic and speak Japanese — ミケ will reply.")
   const [correction, setCorrection] = useState<string | null>(null)
+  const [shadowScore, setShadowScore] = useState<number | null>(null)
+  const [lastMikeLine, setLastMikeLine] = useState("")
   const [listening, setListening] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -120,6 +138,14 @@ export default function TalkPractice() {
     setBusy(true)
     setError(null)
     setCorrection(null)
+    setShadowScore(null)
+
+    if (!reset && shadow && lastMikeLine) {
+      const score = shadowAccuracy(lastMikeLine, trimmed)
+      setShadowScore(score)
+      void api("/learn/shadow", { method: "POST", body: { score } }).then(() => refreshStats())
+      setTip(`Shadow score: ${score}% — ${score >= 80 ? "素晴らしい！" : "もう一度挑戦！"}`)
+    }
 
     if (!reset) {
       setBubbles((b) => [
@@ -129,7 +155,7 @@ export default function TalkPractice() {
     }
 
     try {
-      const data = await api<ChatReply>("/chat/character", {
+      const data = await api<ChatReply & { vocabId?: string | null }>("/chat/character", {
         method: "POST",
         body: { message: trimmed, level, scenario, reset, keigo, shadow },
       })
@@ -144,9 +170,16 @@ export default function TalkPractice() {
           reading: data.replyReading,
         },
       ])
-      setTip(data.tip || tip)
+      setLastMikeLine(data.replyJapanese)
+      if (!shadow || reset) setTip(data.tip || tip)
       setCorrection(data.correction)
       await playVoice(data.replyJapanese)
+
+      // One-tap save to journal when correction/vocab appears
+      if (data.correction || data.replyJapanese) {
+        /* optional — user can use journal page */
+      }
+      await refreshStats()
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message)
@@ -233,10 +266,6 @@ export default function TalkPractice() {
     setMood("idle")
     setCorrection(null)
     setTip("Hold the mic and speak Japanese — ミケ will reply.")
-  }
-
-  if (!isAuthenticated) {
-    // Soft demo gate still wraps route; this is an extra safety message
   }
 
   return (
@@ -385,10 +414,31 @@ export default function TalkPractice() {
               ))}
             </div>
 
-            {(tip || correction) && (
+            {(tip || correction || shadowScore !== null) && (
               <div className="mx-4 mb-2 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
+                {shadowScore !== null && (
+                  <p className="mb-1 font-bold text-emerald-200">Echo score: {shadowScore}%</p>
+                )}
                 {correction && <p className="mb-1"><span className="font-bold">Try:</span> {correction}</p>}
                 {tip && <p><span className="font-bold">Tip:</span> {tip}</p>}
+                {lastMikeLine && (
+                  <button
+                    type="button"
+                    className="mt-2 text-[11px] underline text-pink-200"
+                    onClick={() => {
+                      void api("/learn/journal", {
+                        method: "POST",
+                        body: {
+                          word: lastMikeLine.slice(0, 40),
+                          meaning: "From talk with ミケ",
+                          source: "talk",
+                        },
+                      })
+                    }}
+                  >
+                    Save ミケ’s line to journal
+                  </button>
+                )}
               </div>
             )}
 

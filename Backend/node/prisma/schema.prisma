@@ -17,8 +17,9 @@ model User {
   password  String
   createdAt DateTime   @default(now())
 
-  stats     UserStats? @relation("UserToStats")
-  srs       UserSrs?   @relation("UserToSrs")
+  stats     UserStats?     @relation("UserToStats")
+  srs       UserSrs?       @relation("UserToSrs")
+  journal   VocabJournal[] @relation("UserToJournal")
 }
 
 model UserStats {
@@ -30,17 +31,33 @@ model UserStats {
   practiceDays  Int      @default(0)
   xp            Int      @default(0)
   level         Int      @default(1)
-  lastActiveDay String? // YYYY-MM-DD UTC
+  lastActiveDay String?
+  badges        String[] @default([])
+  shadowBest    Int      @default(0) // best shadowing accuracy 0-100
+  sourceXp      Json? // { srs: 120, talk: 40, ... } feeds the skill tracker
 }
 
-// Central spaced-repetition state (FSRS scheduler JSON from Python service)
 model UserSrs {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   userId     String   @unique @db.ObjectId
   user       User     @relation("UserToSrs", fields: [userId], references: [id])
-  experience Int      @default(0) // 0..2 maps to Python initialize
-  maxTimeMin Int      @default(15) // 10 | 15 | 20
+  experience Int      @default(0)
+  maxTimeMin Int      @default(15)
   scheduler  Json?
-  completed  Json // { [wordId]: Card.to_dict() }
+  completed  Json
   updatedAt  DateTime @updatedAt
+}
+
+model VocabJournal {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation("UserToJournal", fields: [userId], references: [id])
+  word      String
+  reading   String   @default("")
+  meaning   String   @default("")
+  source    String   @default("manual") // talk | srs | game | listen | manual
+  mastered  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

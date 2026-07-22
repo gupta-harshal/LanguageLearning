@@ -111,6 +111,9 @@ export function attachChatRooms(httpServer: HttpServer, corsOrigin?: string | st
       // Small XP for practicing in the room
       try {
         await awardProgress(meta.user.id, { xpGained: 2, source: 'chat' });
+        const { completeQuest, addDailyXp } = await import('./learningService');
+        await addDailyXp(meta.user.id, 2);
+        await completeQuest(meta.user.id, 'chat', 'chat');
       } catch {
         /* ignore */
       }

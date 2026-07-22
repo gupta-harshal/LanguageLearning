@@ -181,9 +181,17 @@ Rules:
     try {
       const { awardProgress } = await import('../../services/progressService');
       await awardProgress(userId, { xpGained: shadow ? 8 : 6, source: 'talk' });
+      const { completeQuest, addDailyXp } = await import('../../services/learningService');
+      await addDailyXp(userId, shadow ? 8 : 6);
+      await completeQuest(userId, 'talk', 'talk');
       if (payload.vocabId) {
         const { queueWordReviews } = await import('../../services/srsService');
-        await queueWordReviews(userId, [{ id: payload.vocabId, correct: !payload.correction }], 'talk');
+        // Correction means they produced it imperfectly → "partial" (Hard), not a full failure
+        await queueWordReviews(
+          userId,
+          [{ id: payload.vocabId, correct: true, partial: !!payload.correction }],
+          'talk'
+        );
       }
     } catch (e) {
       console.warn('talk progress hook failed', e);

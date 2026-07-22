@@ -6,7 +6,6 @@ from fastapi.responses import JSONResponse
 import schema.initializer as initializeSchema
 import schema.reviewer as reviewerSchema
 import schema.wordSelector as wordSelectorSchema
-import numpy as np
 
 app = FastAPI()
 

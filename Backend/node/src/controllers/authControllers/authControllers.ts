@@ -6,7 +6,8 @@ import {
   createSession,
   deleteOtherSessions,
   deleteSession,
-  listSessions,
+  listSessionsDetailed,
+  MAX_DEVICES,
 } from '../../utils/sessions';
 
 const prisma = new PrismaClient();
@@ -34,15 +35,14 @@ export const signup = async (req: Request, res: Response) => {
     });
 
     const { token, jti } = generateToken(user.id);
-    await createSession(user.id, jti, {
+    const devices = await createSession(user.id, jti, {
       createdAt: new Date().toISOString(),
       deviceUserAgent: String(req.headers['user-agent'] || 'unknown').slice(0, 200),
       ipAddress: req.ip || req.socket.remoteAddress || 'unknown',
     });
 
-    res.json({ token });
+    res.json({ token, devices: { ...devices, max: MAX_DEVICES } });
   } catch (err: unknown) {
-    // Prisma unique constraint (duplicate email)
     if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002') {
       return res.status(409).json({ message: 'Email already registered' });
     }
@@ -61,13 +61,23 @@ export const login = async (req: Request, res: Response) => {
   }
 
   const { token, jti } = generateToken(user.id);
-  await createSession(user.id, jti, {
+  const devices = await createSession(user.id, jti, {
     createdAt: new Date().toISOString(),
     deviceUserAgent: String(req.headers['user-agent'] || 'unknown').slice(0, 200),
     ipAddress: req.ip || req.socket.remoteAddress || 'unknown',
   });
 
-  res.json({ token });
+  res.json({
+    token,
+    devices: {
+      ...devices,
+      max: MAX_DEVICES,
+      message:
+        devices.evicted > 0
+          ? `Signed in. Oldest device was signed out (max ${MAX_DEVICES} devices).`
+          : `Signed in (${devices.active}/${MAX_DEVICES} devices).`,
+    },
+  });
 };
 
 export const logout = async (req: Request, res: Response) => {
@@ -82,8 +92,13 @@ export const logout = async (req: Request, res: Response) => {
 
 export const sessions = async (req: Request, res: Response) => {
   const userId = req.user!.id;
-  const allSessions = await listSessions(userId);
-  res.json({ sessions: allSessions });
+  const currentJti = req.user!.jti;
+  const allSessions = await listSessionsDetailed(userId, currentJti);
+  res.json({
+    sessions: allSessions,
+    maxDevices: MAX_DEVICES,
+    active: allSessions.length,
+  });
 };
 
 export const logoutOthers = async (req: Request, res: Response) => {
@@ -93,5 +108,5 @@ export const logoutOthers = async (req: Request, res: Response) => {
   const { userId, jti: currentJti } = verifyToken(token);
   await deleteOtherSessions(userId, currentJti);
 
-  res.json({ message: 'Other sessions logged out' });
+  res.json({ message: 'Other sessions logged out', active: 1, maxDevices: MAX_DEVICES });
 };

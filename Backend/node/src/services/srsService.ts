@@ -1,4 +1,5 @@
 import { prisma, awardProgress, ensureStats } from './progressService';
+import type { PracticeSource } from './progressService';
 import * as scheduler from './schedulerClient';
 
 export type ReviewResultInput = {
@@ -9,6 +10,87 @@ export type ReviewResultInput = {
   mouse_movements?: number;
   tab_change?: boolean;
 };
+
+export type OutcomeInput = { id: string; correct: boolean; partial?: boolean };
+
+export type SrsSource = 'srs' | 'game1' | 'game2' | 'talk' | 'chat' | 'listen' | 'story';
+
+/**
+ * Per-source review profiles.
+ * The Python FSRS reviewer rates from behaviour signals:
+ *   submission=false            -> Again
+ *   submission && (clicks>5 || time>30) -> Hard
+ *   submission && (clicks>3 || time>20) -> Good
+ *   otherwise                   -> Easy
+ *
+ * Each practice mode is different evidence of memory strength, so each
+ * source maps correct/partial/wrong onto different signals:
+ *  - game1  recognition (multiple choice) — correct is only "Good"
+ *  - game2  timed recall (shooter)        — correct under pressure is "Easy"
+ *  - talk   production (speaking)         — correct is "Easy", corrected is "Hard"
+ *  - chat   written production            — correct "Good", wrong "Hard" (peer context)
+ *  - listen listening comprehension       — correct "Good", wrong "Again"
+ */
+const SOURCE_PROFILES: Record<
+  SrsSource,
+  { correct: ReviewResultInput; partial: ReviewResultInput; wrong: ReviewResultInput }
+> = {
+  srs: {
+    correct: { id: '', submission: true, clicks: 1, time: 8 }, // Easy
+    partial: { id: '', submission: true, clicks: 5, time: 22 }, // Hard
+    wrong: { id: '', submission: false, clicks: 6, time: 35 }, // Again
+  },
+  game1: {
+    correct: { id: '', submission: true, clicks: 4, time: 15 }, // Good
+    partial: { id: '', submission: true, clicks: 5, time: 25 }, // Hard
+    wrong: { id: '', submission: false, clicks: 6, time: 30 }, // Again
+  },
+  game2: {
+    correct: { id: '', submission: true, clicks: 1, time: 6 }, // Easy
+    partial: { id: '', submission: true, clicks: 4, time: 21 }, // Good
+    wrong: { id: '', submission: false, clicks: 6, time: 30 }, // Again
+  },
+  talk: {
+    correct: { id: '', submission: true, clicks: 1, time: 10 }, // Easy
+    partial: { id: '', submission: true, clicks: 6, time: 32 }, // Hard
+    wrong: { id: '', submission: false, clicks: 6, time: 35 }, // Again
+  },
+  chat: {
+    correct: { id: '', submission: true, clicks: 4, time: 18 }, // Good
+    partial: { id: '', submission: true, clicks: 6, time: 32 }, // Hard
+    wrong: { id: '', submission: true, clicks: 6, time: 32 }, // Hard (typing has help)
+  },
+  listen: {
+    correct: { id: '', submission: true, clicks: 4, time: 18 }, // Good
+    partial: { id: '', submission: true, clicks: 5, time: 25 }, // Hard
+    wrong: { id: '', submission: false, clicks: 6, time: 30 }, // Again
+  },
+  story: {
+    correct: { id: '', submission: true, clicks: 4, time: 18 }, // Good
+    partial: { id: '', submission: true, clicks: 5, time: 25 }, // Hard
+    wrong: { id: '', submission: false, clicks: 6, time: 30 }, // Again
+  },
+};
+
+/** XP per correct answer differs by effort each mode demands. */
+const SOURCE_XP: Record<SrsSource, { correct: number; wrong: number }> = {
+  srs: { correct: 12, wrong: 3 },
+  game1: { correct: 8, wrong: 2 },
+  game2: { correct: 10, wrong: 2 },
+  talk: { correct: 15, wrong: 4 },
+  chat: { correct: 8, wrong: 3 },
+  listen: { correct: 12, wrong: 3 },
+  story: { correct: 8, wrong: 2 },
+};
+
+/** Convert simple correct/partial/wrong outcomes into FSRS review signals. */
+export function outcomesToResults(outcomes: OutcomeInput[], source: SrsSource): ReviewResultInput[] {
+  const profile = SOURCE_PROFILES[source] || SOURCE_PROFILES.srs;
+  return outcomes.map((o) => {
+    const base = o.correct ? (o.partial ? profile.partial : profile.correct) : profile.wrong;
+    return { ...base, id: String(o.id) };
+  });
+}
 
 async function ensureSrs(userId: string) {
   let row = await prisma.userSrs.findUnique({ where: { userId } });
@@ -98,7 +180,7 @@ export async function fetchDueCards(userId: string) {
 export async function submitReview(
   userId: string,
   results: ReviewResultInput[],
-  source: 'srs' | 'game1' | 'game2' | 'talk' | 'chat' | 'story' = 'srs'
+  source: SrsSource = 'srs'
 ) {
   if (!results.length) {
     throw new Error('results required');
@@ -141,9 +223,19 @@ export async function submitReview(
 
   const correct = normalized.filter((r) => r.submission).length;
   const wrong = normalized.length - correct;
-  const xpGained = correct * 12 + wrong * 3 + 5; // session bonus
+  const xpRates = SOURCE_XP[source] || SOURCE_XP.srs;
+  const xpGained = correct * xpRates.correct + wrong * xpRates.wrong + 5; // +5 session bonus
 
-  const { stats } = await awardProgress(userId, { xpGained, source });
+  const { stats } = await awardProgress(userId, { xpGained, source: source as PracticeSource });
+
+  try {
+    const { completeQuest, addDailyXp } = await import('./learningService');
+    await addDailyXp(userId, xpGained);
+    if (source === 'srs') await completeQuest(userId, 'srs', 'srs');
+    if (source === 'game1' || source === 'game2') await completeQuest(userId, 'game', source);
+  } catch {
+    /* learning hooks are best-effort */
+  }
 
   return {
     stats,
@@ -154,20 +246,22 @@ export async function submitReview(
   };
 }
 
+/** Submit simple outcomes; per-source profile decides the FSRS rating. */
+export async function submitOutcomes(
+  userId: string,
+  outcomes: OutcomeInput[],
+  source: SrsSource
+) {
+  if (!outcomes.length) throw new Error('outcomes required');
+  return submitReview(userId, outcomesToResults(outcomes, source), source);
+}
+
 /** Queue known word IDs as practice events (talk/chat vocab). */
 export async function queueWordReviews(
   userId: string,
-  items: Array<{ id: string; correct: boolean }>,
-  source: 'talk' | 'chat' | 'game1' | 'game2' = 'talk'
+  items: Array<{ id: string; correct: boolean; partial?: boolean }>,
+  source: SrsSource = 'talk'
 ) {
   if (!items.length) return null;
-
-  const results: ReviewResultInput[] = items.map((it) => ({
-    id: String(it.id),
-    submission: it.correct,
-    clicks: it.correct ? 1 : 4,
-    time: it.correct ? 8 : 25,
-  }));
-
-  return submitReview(userId, results, source);
+  return submitOutcomes(userId, items, source);
 }

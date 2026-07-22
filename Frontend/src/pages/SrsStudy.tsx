@@ -70,12 +70,11 @@ export default function SrsStudy() {
         method: "POST",
         body: {
           source: "srs",
-          results: [
+          outcomes: [
             {
               id: String(card.id),
-              submission,
-              clicks: hard ? 5 : submission ? 1 : 6,
-              time: hard ? 22 : submission ? 8 : 35,
+              correct: submission,
+              partial: hard,
             },
           ],
         },

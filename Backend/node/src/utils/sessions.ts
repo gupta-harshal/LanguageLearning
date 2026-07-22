@@ -2,12 +2,14 @@ import { redis } from './redis'
 import { LIMITS } from './limits'
 
 const SESSION_TTL = LIMITS.SESSION_TTL_SECONDS
-const MAX_SESSIONS = LIMITS.MAX_SESSIONS_PER_USER
+export const MAX_DEVICES = LIMITS.MAX_SESSIONS_PER_USER
 
 export type SessionMeta = {
+  jti?: string
   createdAt: string
   deviceUserAgent?: string
   ipAddress?: string
+  label?: string
 }
 
 function sessionKey(userId: string, jti: string) {
@@ -18,18 +20,33 @@ function indexKey(userId: string) {
   return `sessions:index:${userId}`
 }
 
-/** Create a session with TTL and enforce max devices (evicts oldest). Avoids redis.keys(). */
-export async function createSession(userId: string, jti: string, meta: SessionMeta) {
+function deviceLabel(ua?: string) {
+  const s = (ua || 'unknown').toLowerCase()
+  if (s.includes('iphone') || s.includes('ipad')) return 'iOS'
+  if (s.includes('android')) return 'Android'
+  if (s.includes('mac')) return 'Mac'
+  if (s.includes('windows')) return 'Windows'
+  if (s.includes('linux')) return 'Linux'
+  return 'Device'
+}
+
+/** Create session; if over MAX_DEVICES, evict oldest until ≤ 3. */
+export async function createSession(userId: string, jti: string, meta: Omit<SessionMeta, 'jti' | 'label'>) {
   const key = sessionKey(userId, jti)
   const index = indexKey(userId)
+  const payload: SessionMeta = {
+    ...meta,
+    jti,
+    label: deviceLabel(meta.deviceUserAgent),
+  }
 
-  await redis.set(key, JSON.stringify(meta), { ex: SESSION_TTL })
+  await redis.set(key, JSON.stringify(payload), { ex: SESSION_TTL })
   await redis.sadd(index, jti)
   await redis.expire(index, SESSION_TTL)
 
-  // Cap concurrent devices — drop oldest sessions first
+  let evicted = 0
   const members = await redis.smembers(index)
-  if (members.length > MAX_SESSIONS) {
+  if (members.length > MAX_DEVICES) {
     const dated = await Promise.all(
       members.map(async (id) => {
         const raw = await redis.get(sessionKey(userId, id))
@@ -47,14 +64,18 @@ export async function createSession(userId: string, jti: string, meta: SessionMe
       })
     )
     dated.sort((a, b) => a.createdAt - b.createdAt)
-    const toDrop = dated.slice(0, dated.length - MAX_SESSIONS)
+    const toDrop = dated.slice(0, dated.length - MAX_DEVICES)
     await Promise.all(
       toDrop.map(async ({ id }) => {
         await redis.del(sessionKey(userId, id))
         await redis.srem(index, id)
+        evicted += 1
       })
     )
   }
+
+  const active = (await redis.smembers(index)).length
+  return { active, max: MAX_DEVICES, evicted }
 }
 
 export async function getSession(userId: string, jti: string) {
@@ -66,7 +87,7 @@ export async function deleteSession(userId: string, jti: string) {
   await redis.srem(indexKey(userId), jti)
 }
 
-export async function listSessions(userId: string): Promise<(SessionMeta | null)[]> {
+export async function listSessionsDetailed(userId: string, currentJti?: string): Promise<SessionMeta[]> {
   const members = await redis.smembers(indexKey(userId))
   if (!members.length) return []
 
@@ -74,21 +95,33 @@ export async function listSessions(userId: string): Promise<(SessionMeta | null)
     members.map(async (jti) => {
       const raw = await redis.get(sessionKey(userId, jti))
       if (!raw) {
-        // Clean stale index entries (expired session keys)
         await redis.srem(indexKey(userId), jti)
         return null
       }
+      let meta: SessionMeta
       if (typeof raw === 'string') {
         try {
-          return JSON.parse(raw) as SessionMeta
+          meta = JSON.parse(raw) as SessionMeta
         } catch {
           return null
         }
+      } else {
+        meta = raw as SessionMeta
       }
-      return raw as SessionMeta
+      return {
+        ...meta,
+        jti,
+        label: meta.label || deviceLabel(meta.deviceUserAgent),
+        current: currentJti ? jti === currentJti : false,
+      } as SessionMeta & { current?: boolean }
     })
   )
   return results.filter(Boolean) as SessionMeta[]
+}
+
+/** @deprecated use listSessionsDetailed */
+export async function listSessions(userId: string): Promise<(SessionMeta | null)[]> {
+  return listSessionsDetailed(userId)
 }
 
 export async function deleteOtherSessions(userId: string, keepJti: string) {
@@ -101,4 +134,8 @@ export async function deleteOtherSessions(userId: string, keepJti: string) {
         await redis.srem(indexKey(userId), jti)
       })
   )
+}
+
+export async function countSessions(userId: string) {
+  return (await redis.smembers(indexKey(userId))).length
 }

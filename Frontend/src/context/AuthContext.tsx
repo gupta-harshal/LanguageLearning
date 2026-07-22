@@ -22,6 +22,7 @@ export type SessionInfo = {
   createdAt?: string
   deviceUserAgent?: string
   ipAddress?: string
+  label?: string
   current?: boolean
 }
 
@@ -117,7 +118,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const fetchSessions = async (): Promise<SessionInfo[]> => {
-    const data = await api<{ sessions: (SessionInfo | string | null)[] }>("/users/sessions")
+    const data = await api<{ sessions: (SessionInfo | string | null)[]; maxDevices?: number; active?: number }>(
+      "/users/sessions"
+    )
     return (data.sessions || [])
       .map((s) => (typeof s === "string" ? (safeParse(s) as SessionInfo) : s))
       .filter((s): s is SessionInfo => !!s)

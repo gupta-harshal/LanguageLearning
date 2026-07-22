@@ -143,28 +143,41 @@ export default function StorybookReader() {
   }
 
   const saveProgress = async (nextIndex: number, sc: number, complete = false) => {
-    if (!story) return
+    if (!story) return null
     try {
-      const res = await api<{ xpGained: number; justCompleted: boolean }>(`/learn/stories/${story.id}/progress`, {
-        method: "POST",
-        body: { sentenceIndex: nextIndex, score: sc, complete },
-      })
+      const res = await api<{ xpGained: number; justCompleted: boolean; unlockedNext?: boolean }>(
+        `/learn/stories/${story.id}/progress`,
+        {
+          method: "POST",
+          body: { sentenceIndex: nextIndex, score: sc, complete },
+        }
+      )
       if (res.xpGained > 0) {
         setXpFlash(res.xpGained)
         setTimeout(() => setXpFlash(null), 1800)
         void refreshStats()
       }
-      if (res.justCompleted) setFinished(true)
-    } catch {
-      /* offline / demo */
+      if (res.justCompleted || res.unlockedNext) setFinished(true)
+      return res
+    } catch (err) {
+      setFeedback(
+        err instanceof ApiError
+          ? `Could not save progress: ${err.message}`
+          : "Could not save progress — check login / server wake-up."
+      )
+      return null
     }
   }
 
   const goNext = async (sc = score ?? 0) => {
     if (!story) return
-    if (index >= story.sentences.length - 1) {
-      await saveProgress(index, sc, true)
-      setFinished(true)
+    const last = index >= story.sentences.length - 1
+    if (last) {
+      const saved = await saveProgress(index, sc, true)
+      if (saved) {
+        setFinished(true)
+        setFeedback("読み終わりました！ Library will unlock the next level.")
+      }
       return
     }
     const ni = index + 1
@@ -184,7 +197,7 @@ export default function StorybookReader() {
   const startListening = () => {
     const Ctor = getSpeechRecognition()
     if (!Ctor || !current) {
-      setFeedback("Speech recognition needs Chrome / Edge.")
+      setFeedback("Speech recognition needs Chrome / Edge. Use Skip to advance.")
       return
     }
     const rec = new Ctor()
@@ -198,24 +211,33 @@ export default function StorybookReader() {
       const heard = ev.results[0]?.[0]?.transcript || ""
       setListening(false)
       try {
-        const res = await api<{ score: number; pass: boolean }>("/learn/stories/score", {
-          method: "POST",
-          body: { expected: current.ja, heard },
-        })
+        const res = await api<{ score: number; pass: boolean; threshold?: number }>(
+          "/learn/stories/score",
+          {
+            method: "POST",
+            body: {
+              expected: current.ja,
+              reading: current.reading,
+              heard,
+            },
+          }
+        )
         setScore(res.score)
         if (res.pass) {
           setFeedback(`いい発音！ ${res.score}% — advancing…`)
           setTimeout(() => void goNext(res.score), 700)
         } else {
-          setFeedback(`Heard 「${heard}」 — ${res.score}%. Try again or Skip.`)
+          setFeedback(
+            `Heard 「${heard}」 — ${res.score}% (need ~${res.threshold ?? 50}%). Try again or Skip →`
+          )
         }
       } catch {
-        setFeedback(`Heard 「${heard}」`)
+        setFeedback(`Heard 「${heard}」 — scoring failed. Use Skip → to continue.`)
       }
     }
     rec.onerror = () => {
       setListening(false)
-      setFeedback("Mic error — try again or use Skip.")
+      setFeedback("Mic error — try again or use Skip →")
     }
     rec.onend = () => setListening(false)
     rec.start()
@@ -374,7 +396,8 @@ export default function StorybookReader() {
                 </button>
               </div>
               <p className="mt-3 text-center text-[11px] text-[#6b4423]/70">
-                Speak the highlighted line. Pass (~55%+) auto-advances the window.
+                Speak the line (Chrome/Edge). Pass (~50%+) auto-advances. Skip also counts —
+                finish the last line to unlock the next level.
               </p>
             </>
           )}

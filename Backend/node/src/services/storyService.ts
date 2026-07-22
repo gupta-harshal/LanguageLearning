@@ -463,6 +463,8 @@ export async function getStory(userId: string, storyId: string) {
   };
 }
 
+export const PASS_THRESHOLD = 50;
+
 export async function advanceStory(
   userId: string,
   storyId: string,
@@ -470,11 +472,22 @@ export async function advanceStory(
 ) {
   const story = await prisma.story.findUnique({ where: { id: storyId } });
   if (!story) throw new Error('Story not found');
-  const sentences = story.sentences as StorySentence[];
-  const maxIdx = Math.max(0, sentences.length - 1);
-  const sentenceIndex = Math.min(maxIdx, Math.max(0, Math.floor(opts.sentenceIndex)));
+  const sentences = Array.isArray(story.sentences)
+    ? (story.sentences as StorySentence[])
+    : [];
+  if (!sentences.length) throw new Error('Story has no sentences');
+
+  const maxIdx = sentences.length - 1;
+  // Clamp; treat "past the end" as finished
+  let sentenceIndex = Math.floor(Number(opts.sentenceIndex) || 0);
+  if (sentenceIndex < 0) sentenceIndex = 0;
+  if (sentenceIndex > maxIdx) sentenceIndex = maxIdx;
+
   const score = Math.min(100, Math.max(0, Math.round(Number(opts.score) || 0)));
-  const shouldComplete = Boolean(opts.complete) || sentenceIndex >= maxIdx;
+  // Complete only when the client says so, or when index is on the last line
+  // AND complete flag is set. Landing on the last line alone is NOT enough —
+  // user must Skip/Pass the final line (complete: true) to unlock the next level.
+  const shouldComplete = Boolean(opts.complete) && sentenceIndex >= maxIdx;
 
   const existing = await prisma.userStoryProgress.findUnique({
     where: { userId_storyId: { userId, storyId } },
@@ -490,7 +503,7 @@ export async function advanceStory(
       bestScore: score,
     },
     update: {
-      sentenceIndex,
+      sentenceIndex: Math.max(existing?.sentenceIndex ?? 0, sentenceIndex),
       completed: shouldComplete || existing?.completed || false,
       bestScore: Math.max(existing?.bestScore ?? 0, score),
     },
@@ -508,26 +521,111 @@ export async function advanceStory(
     } catch {
       /* quests optional if not yet wired */
     }
-  } else if (score >= 60) {
+  } else if (score >= PASS_THRESHOLD) {
     xpGained = 3;
     await awardProgress(userId, { xpGained, source: 'story' });
   }
 
-  return { progress, xpGained, justCompleted, level: story.level };
+  return {
+    progress,
+    xpGained,
+    justCompleted,
+    level: story.level,
+    unlockedNext: progress.completed,
+  };
 }
 
-/** Simple char-overlap accuracy for read-aloud checks. */
-export function scoreReading(expected: string, heard: string): number {
-  const a = expected.replace(/\s+/g, '').replace(/[「」。、！？!?]/g, '');
-  const b = heard.replace(/\s+/g, '').replace(/[「」。、！？!?]/g, '');
+/**
+ * Read-aloud scoring for Japanese.
+ * Browsers often return kanji (朝です) when the line is hiragana (あさです),
+ * so positional char match alone is useless — we score several normalizations
+ * and take the best.
+ */
+function stripJa(s: string) {
+  return s
+    .normalize('NFKC')
+    .replace(/\s+/g, '')
+    .replace(/[「」『』【】（）()。、！？!?.,…・〜~♪]/g, '')
+    .replace(/ー/g, '');
+}
+
+/** Keep hiragana / katakana / prolonged sound; drop kanji & latin. */
+function kanaOnly(s: string) {
+  return stripJa(s).replace(/[^\u3040-\u309F\u30A0-\u30FF]/g, '');
+}
+
+function lcsLength(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  if (!m || !n) return 0;
+  // rolling two rows to keep it light
+  let prev = new Array(n + 1).fill(0);
+  let cur = new Array(n + 1).fill(0);
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      cur[j] = a[i - 1] === b[j - 1] ? prev[j - 1] + 1 : Math.max(prev[j], cur[j - 1]);
+    }
+    [prev, cur] = [cur, prev];
+    cur.fill(0);
+  }
+  return prev[n];
+}
+
+function orderedCoverage(expected: string, heard: string): number {
+  if (!expected) return 0;
+  let ei = 0;
+  for (let i = 0; i < heard.length && ei < expected.length; i++) {
+    if (heard[i] === expected[ei]) ei++;
+  }
+  return ei / expected.length;
+}
+
+function scorePair(expected: string, heard: string): number {
+  const a = stripJa(expected);
+  const b = stripJa(heard);
   if (!a || !b) return 0;
   if (a === b) return 100;
-  let hits = 0;
-  const len = Math.max(a.length, b.length);
-  for (let i = 0; i < Math.min(a.length, b.length); i++) {
-    if (a[i] === b[i]) hits++;
+
+  const scores: number[] = [];
+
+  // containment (short utterance inside longer expected, or vice versa)
+  if (a.includes(b) || b.includes(a)) {
+    scores.push(Math.round((Math.min(a.length, b.length) / Math.max(a.length, b.length)) * 100));
   }
-  if (a.includes(b) || b.includes(a)) hits = Math.max(hits, Math.floor(len * 0.7));
-  // hiragana flexibility: also compare reading-stripped loosely
-  return Math.round((hits / len) * 100);
+
+  const lcs = lcsLength(a, b);
+  scores.push(Math.round((lcs / Math.max(a.length, b.length)) * 100));
+  scores.push(Math.round(orderedCoverage(a, b) * 100));
+
+  // Kana-only: 朝です → です vs あさです → still catches polite endings
+  const ka = kanaOnly(a);
+  const kb = kanaOnly(b);
+  if (ka && kb) {
+    if (ka === kb) scores.push(100);
+    if (ka.includes(kb) || kb.includes(ka)) {
+      scores.push(Math.round((Math.min(ka.length, kb.length) / Math.max(ka.length, kb.length)) * 100));
+    }
+    scores.push(Math.round((lcsLength(ka, kb) / Math.max(ka.length, kb.length)) * 100));
+    scores.push(Math.round(orderedCoverage(ka, kb) * 100));
+  }
+
+  // Shared ending boost (です / ます / でした …)
+  const endings = ['でした', 'ます', 'です', 'だよ', 'だね', 'たい', 'ない'];
+  for (const end of endings) {
+    if (a.endsWith(end) && b.endsWith(end) && a.length >= end.length && b.length >= end.length) {
+      scores.push(58);
+      break;
+    }
+  }
+
+  return Math.max(0, ...scores);
+}
+
+/** Score heard speech against Japanese line and optional furigana reading. */
+export function scoreReading(expected: string, heard: string, reading?: string): number {
+  const scores = [scorePair(expected, heard)];
+  if (reading && reading.trim()) {
+    scores.push(scorePair(reading, heard));
+  }
+  return Math.min(100, Math.max(0, Math.round(Math.max(...scores))));
 }

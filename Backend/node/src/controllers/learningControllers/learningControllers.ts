@@ -82,11 +82,23 @@ export const listenCheck = async (req: Request, res: Response) => {
   const item = LISTEN_BANK.find((x) => x.id === id);
   if (!item) return res.status(404).json({ message: 'Unknown item' });
 
-  const normalize = (s: string) => s.replace(/\s+/g, '').toLowerCase();
+  const normalize = (s: string) =>
+    s
+      .normalize('NFKC')
+      .replace(/\s+/g, '')
+      .replace(/[。、！？!?]/g, '')
+      .toLowerCase();
+
+  const a = normalize(answer);
+  const blank = normalize(item.blank);
+  const hint = normalize(item.hint);
   const ok =
-    normalize(answer) === normalize(item.blank) ||
-    normalize(answer) === normalize(item.hint) ||
-    item.japanese.includes(answer);
+    !!a &&
+    (a === blank ||
+      a === hint ||
+      blank.includes(a) ||
+      a.includes(blank) ||
+      normalize(item.japanese).includes(a));
 
   if (ok) {
     await awardProgress(req.user!.id, { xpGained: 12, source: 'listen' });
@@ -135,9 +147,14 @@ export const storyAdvance = async (req: Request, res: Response) => {
 };
 
 export const storyScore = async (req: Request, res: Response) => {
-  const { scoreReading } = await import('../../services/storyService');
+  const { scoreReading, PASS_THRESHOLD } = await import('../../services/storyService');
   const expected = String(req.body?.expected || '');
+  const reading = String(req.body?.reading || '');
   const heard = String(req.body?.heard || '');
-  const score = scoreReading(expected, heard);
-  res.json({ score, pass: score >= 55 });
+  const score = scoreReading(expected, heard, reading || undefined);
+  res.json({
+    score,
+    pass: score >= PASS_THRESHOLD,
+    threshold: PASS_THRESHOLD,
+  });
 };

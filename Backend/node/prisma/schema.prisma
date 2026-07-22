@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,7 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-//User Table
 model User {
   id        String     @id @default(auto()) @map("_id") @db.ObjectId
   name      String
@@ -21,17 +17,30 @@ model User {
   password  String
   createdAt DateTime   @default(now())
 
-  stats     UserStats?  @relation("UserToStats") // back-reference
+  stats     UserStats? @relation("UserToStats")
+  srs       UserSrs?   @relation("UserToSrs")
 }
 
-
-//User Statistics Table
-// This table holds user statistics like streak, XP, and level
 model UserStats {
-  id       String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId   String   @unique @db.ObjectId
-  user     User     @relation("UserToStats", fields: [userId], references: [id])
-  streak   Int
-  xp       Int
-  level    Int
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @unique @db.ObjectId
+  user          User     @relation("UserToStats", fields: [userId], references: [id])
+  streak        Int      @default(0)
+  longestStreak Int      @default(0)
+  practiceDays  Int      @default(0)
+  xp            Int      @default(0)
+  level         Int      @default(1)
+  lastActiveDay String? // YYYY-MM-DD UTC
+}
+
+// Central spaced-repetition state (FSRS scheduler JSON from Python service)
+model UserSrs {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @unique @db.ObjectId
+  user       User     @relation("UserToSrs", fields: [userId], references: [id])
+  experience Int      @default(0) // 0..2 maps to Python initialize
+  maxTimeMin Int      @default(15) // 10 | 15 | 20
+  scheduler  Json?
+  completed  Json // { [wordId]: Card.to_dict() }
+  updatedAt  DateTime @updatedAt
 }

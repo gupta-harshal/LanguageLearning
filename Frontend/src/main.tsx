@@ -12,6 +12,9 @@ import TTSDemo from './pages/trialTTS.tsx'
 import Login from './pages/Login.tsx'
 import Signup from './pages/Signup.tsx'
 import Account from './pages/Account.tsx'
+import TalkPractice from './pages/TalkPractice.tsx'
+import SrsStudy from './pages/SrsStudy.tsx'
+import ChatRoom from './pages/ChatRoom.tsx'
 import ProtectedRoute from './components/ProtectedRoute.tsx'
 import { ThemeProvider } from './ThemeContext.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
@@ -32,6 +35,9 @@ const router = createBrowserRouter([
   { path: '/game2', element: protect(<GameCanvas />), errorElement: <div>404 Not Found</div> },
   { path: '/story', element: protect(<JapaneseScroll />), errorElement: <div>404 Not Found</div> },
   { path: '/TTS', element: protect(<TTSDemo />, true), errorElement: <div>404 Not Found</div> },
+  { path: '/talk', element: protect(<TalkPractice />, true), errorElement: <div>404 Not Found</div> },
+  { path: '/srs', element: protect(<SrsStudy />, true), errorElement: <div>404 Not Found</div> },
+  { path: '/chat', element: protect(<ChatRoom />, true), errorElement: <div>404 Not Found</div> },
 ])
 
 createRoot(document.getElementById('root')!).render(

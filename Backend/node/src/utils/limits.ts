@@ -14,12 +14,13 @@ export const LIMITS = {
   IP_SIGNUP_PER_DAY: 5,
 
   // Per-user daily quotas (expensive / paid APIs)
-  USER_TTS_PER_DAY: 15,
+  USER_TTS_PER_DAY: 25,
   USER_CHECK_PER_DAY: 40,
   USER_STATS_WRITES_PER_DAY: 80,
+  USER_CHAT_PER_DAY: 40,
 
-  // TTS payload safety
-  TTS_MAX_CHARS: 200,
+  // TTS payload safety (dialogue turns need a bit more room)
+  TTS_MAX_CHARS: 220,
 } as const
 
 export function envInt(name: string, fallback: number): number {

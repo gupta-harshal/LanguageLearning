@@ -3,9 +3,11 @@ import Calendar from "./Calendar"
 import ModalPortal from "../Modals/ModalPortal"
 import Dropdown, { type Option } from "../Modals/Dropdown"
 import { useTheme } from "../../ThemeContext"
+import { useAuth } from "../../context/AuthContext"
 
 export default function Streak() {
   const { isDarkMode } = useTheme()
+  const { stats, user } = useAuth()
   const [monthDropdownVisible, setMonthDropdownVisible] =
     useState<boolean>(false)
   const [yearDropdownVisible, setYearDropdownVisible] = useState<boolean>(false)
@@ -166,7 +168,7 @@ export default function Streak() {
       )}
       <div className={`flex w-full flex-wrap gap-3 justify-between items-center z-10 border-b pb-4 ${isDarkMode ? "border-white/10" : "border-primary-font-color/10"}`}>
         <h1 className={`font-anglo-japanese text-3xl sm:text-4xl flex items-center gap-2 ${isDarkMode ? "text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-300" : "text-primary-font-color"}`}>
-          <span className="text-orange-500">🔥</span> Streak
+          <span className="text-orange-500">🔥</span> {stats?.streak ?? 0} day streak
         </h1>
         <div className={`flex gap-2 sm:gap-4 p-2 rounded-full border shadow-inner ${isDarkMode ? "bg-white/5 border-white/10" : "bg-primary-background/70 border-primary-font-color/10"}`}>
           <div
@@ -184,6 +186,20 @@ export default function Streak() {
         </div>
       </div>
       <div className={`${isDarkMode ? "bg-white/5 border-white/5" : "bg-primary-background/70 border-primary-font-color/10"} z-10 rounded-2xl p-4 backdrop-blur-md border shadow-2xl`}>
+        <div className="mb-4 grid grid-cols-3 gap-2 text-center text-xs sm:text-sm">
+          <div>
+            <p className="text-xl font-bold text-pink-primary">{stats?.xp ?? 0}</p>
+            <p className="text-secondary-font-color">XP</p>
+          </div>
+          <div>
+            <p className="text-xl font-bold text-pink-primary">Lv {stats?.level ?? 1}</p>
+            <p className="text-secondary-font-color">{user?.name?.split(" ")[0] || "you"}</p>
+          </div>
+          <div>
+            <p className="text-xl font-bold text-pink-primary">{stats?.longestStreak ?? stats?.streak ?? 0}</p>
+            <p className="text-secondary-font-color">best</p>
+          </div>
+        </div>
         <Calendar month={selectedMonth} year={selectedYear} />
       </div>
     </div>

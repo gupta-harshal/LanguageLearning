@@ -8,6 +8,15 @@ export type User = {
   email: string
 }
 
+export type UserStats = {
+  streak: number
+  longestStreak?: number
+  practiceDays?: number
+  xp: number
+  level: number
+  lastActiveDay?: string | null
+}
+
 export type SessionInfo = {
   jti?: string
   createdAt?: string
@@ -18,6 +27,7 @@ export type SessionInfo = {
 
 type AuthContextType = {
   user: User | null
+  stats: UserStats | null
   loading: boolean
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
@@ -26,29 +36,43 @@ type AuthContextType = {
   logoutOthers: () => Promise<void>
   fetchSessions: () => Promise<SessionInfo[]>
   refresh: () => Promise<void>
+  refreshStats: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [stats, setStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   const loadMe = async () => {
     if (!getToken()) {
       setUser(null)
+      setStats(null)
       setLoading(false)
       return
     }
     try {
-      const data = await api<{ user: User }>("/users/me")
+      const data = await api<{ user: User; stats: UserStats }>("/users/me")
       setUser(data.user)
+      setStats(data.stats)
     } catch {
-      // token invalid/expired — client already cleared it on 401
       clearToken()
       setUser(null)
+      setStats(null)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const refreshStats = async () => {
+    if (!getToken()) return
+    try {
+      const data = await api<{ stats: UserStats }>("/users/stats")
+      setStats(data.stats)
+    } catch {
+      /* ignore */
     }
   }
 
@@ -81,10 +105,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await api("/users/logout", { method: "POST" })
     } catch {
-      /* ignore network errors on logout */
+      /* ignore */
     }
     clearToken()
     setUser(null)
+    setStats(null)
   }
 
   const logoutOthers = async () => {
@@ -100,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthContextType = {
     user,
+    stats,
     loading,
     isAuthenticated: !!user,
     login,
@@ -108,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logoutOthers,
     fetchSessions,
     refresh: loadMe,
+    refreshStats,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

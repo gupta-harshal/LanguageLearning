@@ -16,6 +16,16 @@ import { motion, AnimatePresence, useAnimationControls } from "framer-motion"
 import { useRecoilState } from "recoil"
 import { score as scoreAtom } from "../atoms/flashcardreading/score"
 import { playChime, playThunder, setMuted, isMuted } from "../utils/sound"
+import { api } from "../api/client"
+
+function awardGameXp(xpGained: number) {
+  void api("/srs/ping", {
+    method: "POST",
+    body: { xpGained, source: "game1" },
+  }).catch(() => {
+    /* offline / unauthenticated demo — ignore */
+  })
+}
 
 type Round = {
   prompt: string
@@ -357,6 +367,7 @@ export default function CardGame1() {
       setEffect("sakura")
       setMessage(`正解! ${round.prompt} (${round.reading}) = ${round.meaning}  +${gained}`)
       playChime()
+      awardGameXp(Math.min(20, 8 + combo))
       if (roundIndex >= ROUNDS.length - 1) {
         setTimeout(() => setWon(true), 900)
       } else {
@@ -374,6 +385,7 @@ export default function CardGame1() {
       setEffect("thunder")
       setMessage(`Not ${picked.word.toLowerCase()} — the storm rolls in`)
       playThunder()
+      awardGameXp(2)
       shake.start({ x: [0, -12, 10, -8, 6, 0], transition: { duration: 0.5 } })
       setTimeout(() => setOrbState("idle"), 800)
     }

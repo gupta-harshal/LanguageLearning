@@ -1,18 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { ensureStats, awardProgress, prisma } from '../../services/progressService';
 
-const prisma = new PrismaClient();
-
-// Ensure a UserStats row exists for a user, creating a default one if needed.
-async function ensureStats(userId: string) {
-  const existing = await prisma.userStats.findUnique({ where: { userId } });
-  if (existing) return existing;
-  return prisma.userStats.create({
-    data: { userId, streak: 0, xp: 0, level: 1 },
-  });
-}
-
-// GET /users/me — current user profile + stats (used by the frontend to hydrate auth state)
 export const me = async (req: Request, res: Response) => {
   const userId = req.user!.id;
 
@@ -27,27 +15,25 @@ export const me = async (req: Request, res: Response) => {
   res.json({ user, stats });
 };
 
-// GET /users/stats — streak / xp / level for the current user
 export const getStats = async (req: Request, res: Response) => {
   const stats = await ensureStats(req.user!.id);
   res.json({ stats });
 };
 
-// POST /users/stats — update progress after a game/lesson.
-// Body: { xpGained?: number, streak?: number }  (xpGained is added; level derived from xp)
 export const updateStats = async (req: Request, res: Response) => {
-  const userId = req.user!.id;
   const { xpGained = 0, streak } = req.body ?? {};
-
-  const current = await ensureStats(userId);
-  const newXp = current.xp + Math.max(0, Number(xpGained) || 0);
-  const newLevel = Math.floor(newXp / 100) + 1; // 100 xp per level
-  const newStreak = typeof streak === 'number' ? streak : current.streak;
-
-  const stats = await prisma.userStats.update({
-    where: { userId },
-    data: { xp: newXp, level: newLevel, streak: newStreak },
+  const { stats } = await awardProgress(req.user!.id, {
+    xpGained: Number(xpGained) || 0,
+    source: 'manual',
   });
+
+  if (typeof streak === 'number') {
+    const updated = await prisma.userStats.update({
+      where: { userId: req.user!.id },
+      data: { streak },
+    });
+    return res.json({ stats: updated });
+  }
 
   res.json({ stats });
 };

@@ -3,12 +3,23 @@ import { Link } from "react-router-dom"
 import Streak from "../components/Dashboard/Streak"
 import Sidebar from "../components/Dashboard/Sidebar"
 import { useTheme } from "../ThemeContext"
+import { useAuth } from "../context/AuthContext"
 
 const questCards = [
   {
-    title: "Daily Quests",
-    body: "Complete 3 lessons to earn a badge!",
-    to: "/story",
+    title: "SRS Deck",
+    body: "Spaced repetition — the core of long-term memory.",
+    to: "/srs",
+  },
+  {
+    title: "Talk with ミケ",
+    body: "Video-call practice — speak Japanese with an animated tutor.",
+    to: "/talk",
+  },
+  {
+    title: "Chat Room",
+    body: "Type romaji or Japanese with learners + Gemini coach.",
+    to: "/chat",
   },
   {
     title: "Vocabulary",
@@ -20,10 +31,16 @@ const questCards = [
     body: "Blast asteroids and reinforce kanji recall.",
     to: "/game2",
   },
+  {
+    title: "Storybook",
+    body: "Read folktales side by side.",
+    to: "/story",
+  },
 ]
 
 export default function Dashboard() {
   const { isDarkMode, toggleTheme } = useTheme()
+  const { user, stats } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
@@ -82,10 +99,14 @@ export default function Dashboard() {
                   : "text-primary-font-color"
               }`}
             >
-              Welcome back, Learner!
+              Welcome back, {user?.name?.split(" ")[0] || "Learner"}!
             </h1>
+            <p className="text-secondary-font-color mb-4 max-w-xl text-sm sm:text-base">
+              🔥 {stats?.streak ?? 0} day streak · Lv {stats?.level ?? 1} · {stats?.xp ?? 0} XP ·{" "}
+              {stats?.practiceDays ?? 0} practice days
+            </p>
             <p className="text-secondary-font-color mb-6 sm:mb-10 max-w-xl text-sm sm:text-base">
-              Pick up where you left off — stories, games, and streaks all in one place.
+              SRS is the spine — talk, chat, and games all feed your memory and streak.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">

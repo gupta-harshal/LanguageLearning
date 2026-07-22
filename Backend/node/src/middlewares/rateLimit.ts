@@ -118,3 +118,11 @@ export const statsWriteLimit = rateLimit({
   identity: 'user',
   message: 'Too many progress updates today.',
 })
+
+export const chatUserLimit = rateLimit({
+  prefix: 'rl:chat',
+  limit: envInt('LIMIT_USER_CHAT_PER_DAY', LIMITS.USER_CHAT_PER_DAY),
+  windowSeconds: 24 * 60 * 60,
+  identity: 'user',
+  message: 'Daily conversation limit reached. Come back tomorrow to keep practicing!',
+})

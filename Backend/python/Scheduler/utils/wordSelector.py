@@ -1,12 +1,32 @@
-from fsrs import Scheduler, Card
+from fsrs import Card
 from datetime import datetime, timezone
-from data.data import getWordsSorted, getWordID
+from data.data import getWordsSorted
 import random
 
 
-def wordSelector(completed : list):
-    completed_id = {x["id"] for x in completed}
-    revision = revisedWordSelector(completed)
+def normalize_completed(completed):
+    """Accept review-style dict {id: Card.to_dict()} or a list of card dicts."""
+    if completed is None:
+        return []
+    if isinstance(completed, dict):
+        items = []
+        for cid, card in completed.items():
+            if isinstance(card, dict):
+                entry = dict(card)
+                entry["id"] = str(cid)
+                items.append(entry)
+            else:
+                items.append({"id": str(cid)})
+        return items
+    if isinstance(completed, list):
+        return completed
+    return []
+
+
+def wordSelector(completed):
+    completed_list = normalize_completed(completed)
+    completed_id = {str(x.get("id")) for x in completed_list}
+    revision = revisedWordSelector(completed_list)
     result = []
     resultID = set()
 
@@ -19,28 +39,39 @@ def wordSelector(completed : list):
     while len(result) < randomWordsLimit and currIter < maxIter:
         i = random.randint(0, len(frequent_words) - 1)
         currIter += 1
-        id = frequent_words.iloc[i]["id"]
-        if id not in completed_id and id not in resultID:
+        wid = frequent_words.iloc[i]["id"]
+        if str(wid) not in completed_id and wid not in resultID:
             result.append(frequent_words.iloc[i].to_dict())
-            resultID.add(frequent_words.iloc[i]["id"])
+            resultID.add(wid)
 
-    for i, row in frequent_words.iterrows():
-        if row["id"] in completed_id or row["id"] in resultID:
+    for _, row in frequent_words.iterrows():
+        if str(row["id"]) in completed_id or row["id"] in resultID:
             continue
-        else:
-            result.append(row.to_dict())
-            resultID.add(row["id"])
-            if len(result) - randomWordsLimit >= newWordsLimit:
-                break
-    
-    result.extend([x.to_dict() for i, x in enumerate(revision) if i < revisionLimit])
+        result.append(row.to_dict())
+        resultID.add(row["id"])
+        if len(result) - randomWordsLimit >= newWordsLimit:
+            break
 
-    return result, completed[revisionLimit : ]
+    result.extend([x for i, x in enumerate(revision) if i < revisionLimit])
+
+    return result, completed_list[revisionLimit:]
+
 
 def findWordsLimit():
-    # Add some logic based on level and frequency and last accessed and preference
     return 4, 2, 6
 
-def revisedWordSelector(completed : list):
-    revision = [x for x in completed if Card.from_dict(x["id"]).due < datetime.now(timezone.utc)]
+
+def revisedWordSelector(completed: list):
+    revision = []
+    now = datetime.now(timezone.utc)
+    for x in completed:
+        try:
+            card_dict = {k: v for k, v in x.items() if k != "id"}
+            if "due" not in card_dict and "state" not in card_dict:
+                continue
+            card = Card.from_dict(card_dict)
+            if card.due < now:
+                revision.append(x)
+        except Exception:
+            continue
     return revision

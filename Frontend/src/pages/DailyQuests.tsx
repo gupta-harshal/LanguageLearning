@@ -18,6 +18,7 @@ const LINKS: Record<string, string> = {
   game: "/game1",
   listen: "/listen",
   journal: "/journal",
+  story: "/story",
 }
 
 export default function DailyQuests() {

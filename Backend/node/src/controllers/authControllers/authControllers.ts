@@ -35,49 +35,68 @@ export const signup = async (req: Request, res: Response) => {
     });
 
     const { token, jti } = generateToken(user.id);
-    const devices = await createSession(user.id, jti, {
-      createdAt: new Date().toISOString(),
-      deviceUserAgent: String(req.headers['user-agent'] || 'unknown').slice(0, 200),
-      ipAddress: req.ip || req.socket.remoteAddress || 'unknown',
-    });
+    let devices = { active: 1, max: MAX_DEVICES, evicted: 0 };
+    try {
+      devices = await createSession(user.id, jti, {
+        createdAt: new Date().toISOString(),
+        deviceUserAgent: String(req.headers['user-agent'] || 'unknown').slice(0, 200),
+        ipAddress: req.ip || req.socket.remoteAddress || 'unknown',
+      });
+    } catch (err) {
+      console.error('[signup] session create failed (Redis?)', err);
+    }
 
     res.json({ token, devices: { ...devices, max: MAX_DEVICES } });
   } catch (err: unknown) {
     if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002') {
       return res.status(409).json({ message: 'Email already registered' });
     }
-    throw err;
+    console.error('[signup]', err);
+    res.status(500).json({ message: err instanceof Error ? err.message : 'Signup failed' });
   }
 };
 
 export const login = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const user = await prisma.user.findUnique({
-    where: { email: String(email || '').toLowerCase().trim() },
-  });
-  if (!user || !(await bcrypt.compare(String(password || ''), user.password))) {
-    return res.status(401).json({ message: 'Invalid credentials' });
+    const user = await prisma.user.findUnique({
+      where: { email: String(email || '').toLowerCase().trim() },
+    });
+    if (!user || !(await bcrypt.compare(String(password || ''), user.password))) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const { token, jti } = generateToken(user.id);
+    let devices = { active: 1, max: MAX_DEVICES, evicted: 0 };
+    try {
+      devices = await createSession(user.id, jti, {
+        createdAt: new Date().toISOString(),
+        deviceUserAgent: String(req.headers['user-agent'] || 'unknown').slice(0, 200),
+        ipAddress: req.ip || req.socket.remoteAddress || 'unknown',
+      });
+    } catch (err) {
+      console.error('[login] session create failed (Redis?)', err);
+      // Still return a token so the user can use the app; session middleware may fail until Redis recovers
+    }
+
+    res.json({
+      token,
+      devices: {
+        ...devices,
+        max: MAX_DEVICES,
+        message:
+          devices.evicted > 0
+            ? `Signed in. Oldest device was signed out (max ${MAX_DEVICES} devices).`
+            : `Signed in (${devices.active}/${MAX_DEVICES} devices).`,
+      },
+    });
+  } catch (err: unknown) {
+    console.error('[login]', err);
+    res.status(500).json({
+      message: err instanceof Error ? err.message : 'Login failed',
+    });
   }
-
-  const { token, jti } = generateToken(user.id);
-  const devices = await createSession(user.id, jti, {
-    createdAt: new Date().toISOString(),
-    deviceUserAgent: String(req.headers['user-agent'] || 'unknown').slice(0, 200),
-    ipAddress: req.ip || req.socket.remoteAddress || 'unknown',
-  });
-
-  res.json({
-    token,
-    devices: {
-      ...devices,
-      max: MAX_DEVICES,
-      message:
-        devices.evicted > 0
-          ? `Signed in. Oldest device was signed out (max ${MAX_DEVICES} devices).`
-          : `Signed in (${devices.active}/${MAX_DEVICES} devices).`,
-    },
-  });
 };
 
 export const logout = async (req: Request, res: Response) => {

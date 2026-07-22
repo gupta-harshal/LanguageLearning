@@ -12,4 +12,9 @@ learningRouter.post('/shadow', authenticate, learning.shadowScore);
 learningRouter.get('/listen/next', authenticate, learning.listenNext);
 learningRouter.post('/listen/check', authenticate, learning.listenCheck);
 
+learningRouter.get('/stories', authenticate, learning.storiesList);
+learningRouter.post('/stories/score', authenticate, learning.storyScore);
+learningRouter.get('/stories/:id', authenticate, learning.storyGet);
+learningRouter.post('/stories/:id/progress', authenticate, learning.storyAdvance);
+
 export default learningRouter;

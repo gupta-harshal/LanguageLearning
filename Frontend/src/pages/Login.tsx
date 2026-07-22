@@ -1,8 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import AuthLayout from "../components/Auth/AuthLayout"
 import { useAuth } from "../context/AuthContext"
-import { ApiError } from "../api/client"
+import { ApiError, wakeBackend } from "../api/client"
 
 export default function Login() {
   const { login } = useAuth()
@@ -14,6 +14,13 @@ export default function Login() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [waking, setWaking] = useState(false)
+
+  // Nudge Render so the free instance is already waking while the user types
+  useEffect(() => {
+    setWaking(true)
+    void wakeBackend().finally(() => setWaking(false))
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +33,9 @@ export default function Login() {
       if (err instanceof ApiError) {
         setError(err.status === 401 ? "Invalid email or password." : err.message)
       } else {
-        setError("Could not reach the server. Is the backend running?")
+        setError(
+          "Could not reach the server. On Render free tier the first start can take ~60s — wait and try again."
+        )
       }
     } finally {
       setLoading(false)
@@ -46,6 +55,13 @@ export default function Login() {
         </>
       }
     >
+      {(waking || loading) && (
+        <p className="mb-3 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
+          {loading
+            ? "Signing in… if this is the first visit in a while, Render may need ~30–60s to wake up."
+            : "Waking the backend on Render (free tier cold start)…"}
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" autoFocus />
         <Field label="Password" type="password" value={password} onChange={setPassword} placeholder="••••••••" />

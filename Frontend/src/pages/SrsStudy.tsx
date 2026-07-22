@@ -40,14 +40,14 @@ export default function SrsStudy() {
       await api("/srs/bootstrap", { method: "POST", body: { experience: 0, maxTimeMin: 15 } })
       const ov = await api<Overview>("/srs/overview")
       setOverview(ov)
-      const data = await api<{ cards: SrsCard[] }>("/srs/cards")
+      const data = await api<{ cards: SrsCard[]; mode?: string }>("/srs/cards")
       setCards(data.cards || [])
       setIndex(0)
       setFlipped(false)
       setMessage(
-        ov.schedulerOnline
-          ? `${data.cards?.length || 0} cards ready · ${ov.cardCount} in your memory bank`
-          : "Scheduler offline — start the Python FSRS service and set SCHEDULER_URL"
+        data.mode === "fallback" || !ov.schedulerOnline
+          ? `${data.cards?.length || 0} practice cards (offline FSRS fallback) · XP still counts`
+          : `${data.cards?.length || 0} cards ready · ${ov.cardCount} in your memory bank`
       )
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not load SRS")

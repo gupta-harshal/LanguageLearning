@@ -8,8 +8,13 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
   try {
     const { userId, jti } = verifyToken(token);
-    const session = await getSession(userId, jti);
-    if (!session) return res.status(401).json({ message: 'Session expired or invalid' });
+    try {
+      const session = await getSession(userId, jti);
+      if (!session) return res.status(401).json({ message: 'Session expired or invalid' });
+    } catch (err) {
+      // Redis blip — trust a valid JWT so login isn't dead
+      console.warn('[auth] session lookup failed, allowing JWT', err);
+    }
 
     req.user = { id: userId, jti };
     next();

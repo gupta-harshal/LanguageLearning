@@ -47,6 +47,11 @@ const questCards = [
     body: "Blast asteroids and reinforce kanji recall.",
     to: "/game2",
   },
+  {
+    title: "Storybook",
+    body: "Levelled Japanese readers — speak each line in a sliding window.",
+    to: "/story",
+  },
 ]
 
 export default function Dashboard() {
@@ -58,7 +63,7 @@ export default function Dashboard() {
     <div
       className={`${
         isDarkMode ? "dark" : "light"
-      } w-full min-h-[100svh] bg-primary-background text-primary-font-color overflow-x-hidden font-sans transition-colors duration-500`}
+      } w-full min-h-[100svh] bg-primary-background text-primary-font-color font-sans transition-colors duration-500`}
     >
       <button
         type="button"
@@ -71,7 +76,9 @@ export default function Dashboard() {
       <button
         type="button"
         onClick={() => setSidebarOpen(true)}
-        className="fixed top-4 left-4 z-[60] lg:hidden glass shadow-md px-3 py-2 rounded-full font-bold text-sm text-primary-font-color"
+        className={`fixed top-4 left-4 z-[90] lg:hidden glass shadow-md px-3 py-2 rounded-full font-bold text-sm text-primary-font-color transition-opacity touch-manipulation ${
+          sidebarOpen ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
         aria-label="Open menu"
       >
         ☰ Menu
@@ -144,7 +151,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <section className="p-4 sm:p-6 lg:p-8 w-full lg:w-[380px] xl:w-[420px] flex flex-col gap-4 sm:gap-6 items-stretch justify-start z-30 shrink-0">
+        <section className="p-4 sm:p-6 lg:p-8 w-full lg:w-[380px] xl:w-[420px] flex flex-col gap-4 sm:gap-6 items-stretch justify-start z-30 shrink-0 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           <Streak />
           <LevelTracker />
         </section>

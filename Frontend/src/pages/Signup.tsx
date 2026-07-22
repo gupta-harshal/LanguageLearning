@@ -1,8 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import AuthLayout from "../components/Auth/AuthLayout"
 import { useAuth } from "../context/AuthContext"
-import { ApiError } from "../api/client"
+import { ApiError, wakeBackend } from "../api/client"
 
 export default function Signup() {
   const { signup } = useAuth()
@@ -13,6 +13,10 @@ export default function Signup() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    void wakeBackend()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,9 +31,15 @@ export default function Signup() {
       navigate("/dashboard", { replace: true })
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.status === 400 ? "Please fill in all fields correctly." : "That email may already be registered.")
+        if (err.status === 503 || err.message.includes("waking")) {
+          setError(err.message)
+        } else if (err.status === 400) {
+          setError("Please fill in all fields correctly.")
+        } else {
+          setError(err.message || "That email may already be registered.")
+        }
       } else {
-        setError("Could not reach the server. Is the backend running?")
+        setError("Server may be waking up on Render (~60s). Wait and try again.")
       }
     } finally {
       setLoading(false)

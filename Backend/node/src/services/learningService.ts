@@ -1,7 +1,7 @@
 import { redis } from '../utils/redis';
 import { awardProgress, ensureStats, prisma, PracticeSource } from './progressService';
 
-export type QuestId = 'srs' | 'talk' | 'chat' | 'game' | 'listen' | 'journal';
+export type QuestId = 'srs' | 'talk' | 'chat' | 'game' | 'listen' | 'journal' | 'story';
 
 const QUEST_META: Record<QuestId, { title: string; blurb: string; xp: number }> = {
   srs: { title: 'Review 5 SRS cards', blurb: 'Open the deck and rate at least one card', xp: 25 },
@@ -10,6 +10,7 @@ const QUEST_META: Record<QuestId, { title: string; blurb: string; xp: number }> 
   game: { title: 'Play a vocab game', blurb: 'Score points in Cloud or Space', xp: 15 },
   listen: { title: 'Listening cloze', blurb: 'Finish one listen-and-fill exercise', xp: 20 },
   journal: { title: 'Save a word', blurb: 'Add a word to your vocab journal', xp: 10 },
+  story: { title: 'Read a story', blurb: 'Finish one sliding-window storybook', xp: 20 },
 };
 
 function dayKey(userId: string, day = new Date().toISOString().slice(0, 10)) {
@@ -46,6 +47,7 @@ export async function getDaily(userId: string): Promise<DailyState> {
     game: false,
     listen: false,
     journal: false,
+    story: false,
     ...(parsed.quests || {}),
   };
 

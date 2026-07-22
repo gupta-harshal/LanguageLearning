@@ -9,18 +9,18 @@ export const LIMITS = {
   MAX_SESSIONS_PER_USER: 3,
 
   // Per-IP sliding windows (Redis counters with short TTL)
-  IP_GLOBAL_PER_MINUTE: 60,
-  IP_AUTH_PER_HOUR: 20, // login + signup combined
-  IP_SIGNUP_PER_DAY: 5,
+  IP_GLOBAL_PER_MINUTE: 120,
+  IP_AUTH_PER_HOUR: 60, // login + signup — was too tight for demos
+  IP_SIGNUP_PER_DAY: 10,
 
   // Per-user daily quotas (expensive / paid APIs)
-  USER_TTS_PER_DAY: 25,
+  USER_TTS_PER_DAY: 60,
   USER_CHECK_PER_DAY: 40,
-  USER_STATS_WRITES_PER_DAY: 80,
-  USER_CHAT_PER_DAY: 40,
+  USER_STATS_WRITES_PER_DAY: 120,
+  USER_CHAT_PER_DAY: 80,
 
   // TTS payload safety (dialogue turns need a bit more room)
-  TTS_MAX_CHARS: 220,
+  TTS_MAX_CHARS: 280,
 } as const
 
 export function envInt(name: string, fallback: number): number {

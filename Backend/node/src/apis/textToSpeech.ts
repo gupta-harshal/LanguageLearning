@@ -13,6 +13,9 @@ export default async function TTS(req: Request, res: Response) {
   if (!text) {
     return res.status(400).json({ error: "Text is required" });
   }
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(503).json({ error: "OPENAI_API_KEY is not configured on the server" });
+  }
   if (raw.trim().length > LIMITS.TTS_MAX_CHARS) {
     return res.status(400).json({
       error: `Text too long. Max ${LIMITS.TTS_MAX_CHARS} characters.`,
@@ -20,12 +23,23 @@ export default async function TTS(req: Request, res: Response) {
   }
 
   try {
-    const audioResponse = await openai.audio.speech.create({
-      model: "gpt-4o-mini-tts",
-      voice: "coral",
-      input: text,
-      response_format: "mp3",
-    });
+    // Prefer mini TTS; fall back to classic tts-1 if the account lacks the newer model
+    let audioResponse;
+    try {
+      audioResponse = await openai.audio.speech.create({
+        model: "gpt-4o-mini-tts",
+        voice: "coral",
+        input: text,
+        response_format: "mp3",
+      });
+    } catch {
+      audioResponse = await openai.audio.speech.create({
+        model: "tts-1",
+        voice: "nova",
+        input: text,
+        response_format: "mp3",
+      });
+    }
     const arrayBuffer = await audioResponse.arrayBuffer();
     const audioBuffer = Buffer.from(arrayBuffer);
 

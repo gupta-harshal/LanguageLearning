@@ -25,11 +25,15 @@ export const dailyQuests = async (req: Request, res: Response) => {
 
 export const markQuest = async (req: Request, res: Response) => {
   const quest = String(req.body?.quest || '') as QuestId;
-  const allowed: QuestId[] = ['srs', 'talk', 'chat', 'game', 'listen', 'journal'];
+  const allowed: QuestId[] = ['srs', 'talk', 'chat', 'game', 'listen', 'journal', 'story'];
   if (!allowed.includes(quest)) {
     return res.status(400).json({ message: 'Invalid quest' });
   }
-  const result = await completeQuest(req.user!.id, quest, quest === 'game' ? 'game1' : quest === 'talk' ? 'talk' : 'manual');
+  const result = await completeQuest(
+    req.user!.id,
+    quest,
+    quest === 'game' ? 'game1' : quest === 'talk' ? 'talk' : quest === 'story' ? 'story' : 'manual'
+  );
   res.json(result);
 };
 
@@ -97,4 +101,43 @@ export const listenCheck = async (req: Request, res: Response) => {
     full: item.japanese,
     english: item.english,
   });
+};
+
+export const storiesList = async (req: Request, res: Response) => {
+  const { listStories } = await import('../../services/storyService');
+  const data = await listStories(req.user!.id);
+  res.json(data);
+};
+
+export const storyGet = async (req: Request, res: Response) => {
+  try {
+    const { getStory } = await import('../../services/storyService');
+    const data = await getStory(req.user!.id, String(req.params.id));
+    if (data.locked) return res.status(403).json(data);
+    res.json(data);
+  } catch (err: unknown) {
+    res.status(404).json({ message: err instanceof Error ? err.message : 'Not found' });
+  }
+};
+
+export const storyAdvance = async (req: Request, res: Response) => {
+  try {
+    const { advanceStory } = await import('../../services/storyService');
+    const data = await advanceStory(req.user!.id, String(req.params.id), {
+      sentenceIndex: Number(req.body?.sentenceIndex) || 0,
+      score: Number(req.body?.score) || 0,
+      complete: Boolean(req.body?.complete),
+    });
+    res.json(data);
+  } catch (err: unknown) {
+    res.status(400).json({ message: err instanceof Error ? err.message : 'Failed' });
+  }
+};
+
+export const storyScore = async (req: Request, res: Response) => {
+  const { scoreReading } = await import('../../services/storyService');
+  const expected = String(req.body?.expected || '');
+  const heard = String(req.body?.heard || '');
+  const score = scoreReading(expected, heard);
+  res.json({ score, pass: score >= 55 });
 };

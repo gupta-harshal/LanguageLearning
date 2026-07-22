@@ -8,7 +8,7 @@ export const overview = async (req: Request, res: Response) => {
     res.json(data);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'SRS overview failed';
-    res.status(503).json({ message, hint: 'Is the Python scheduler running? Set SCHEDULER_URL.' });
+    res.status(500).json({ message });
   }
 };
 
@@ -18,11 +18,11 @@ export const bootstrap = async (req: Request, res: Response) => {
     res.json({
       experience: row.experience,
       maxTimeMin: row.maxTimeMin,
-      ready: !!row.scheduler,
+      ready: true,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'SRS bootstrap failed';
-    res.status(503).json({ message, hint: 'Start Backend/python/Scheduler (uvicorn) and set SCHEDULER_URL.' });
+    res.status(500).json({ message });
   }
 };
 
@@ -32,7 +32,7 @@ export const cards = async (req: Request, res: Response) => {
     res.json(data);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to fetch cards';
-    res.status(503).json({ message });
+    res.status(500).json({ message });
   }
 };
 

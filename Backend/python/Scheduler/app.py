@@ -6,8 +6,22 @@ from fastapi.responses import JSONResponse
 import schema.initializer as initializeSchema
 import schema.reviewer as reviewerSchema
 import schema.wordSelector as wordSelectorSchema
+import math
 
 app = FastAPI()
+
+def scrub(value):
+    """Make pandas / numpy values JSON-safe."""
+    if value is None:
+        return ""
+    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+        return ""
+    if hasattr(value, "item"):
+        try:
+            return value.item()
+        except Exception:
+            pass
+    return value
 
 @app.get("/")
 def home():
@@ -27,17 +41,39 @@ def review_data(data : reviewerSchema.Input):
 
 @app.post("/getCards", response_model=wordSelectorSchema.Output)
 def getCards(data : wordSelectorSchema.Input):
-    results, completed = wordSelector(data.completed) 
+    results, completed = wordSelector(data.completed)
 
+    cleaned = []
     for result in results:
-        if type(result["furigana"]) != str:
-            result["furigana"] = ""
-        result["level"] = int(result["level"])
-        result["id"] = int(result["id"])
-        result["difficulty"] = float(result["difficulty"])
+        row = {k: scrub(v) for k, v in dict(result).items()}
+        furigana = row.get("furigana", "")
+        if not isinstance(furigana, str):
+            furigana = "" if furigana is None else str(furigana)
+        try:
+            level = int(float(row.get("level") or 0))
+        except Exception:
+            level = 0
+        try:
+            rid = int(float(row.get("id")))
+        except Exception:
+            rid = str(row.get("id"))
+        try:
+            difficulty = float(row.get("difficulty") or 0)
+        except Exception:
+            difficulty = 0.0
+        cleaned.append({
+            **row,
+            "furigana": furigana,
+            "level": level,
+            "id": rid,
+            "difficulty": difficulty,
+            "word": str(row.get("word") or ""),
+            "meaning": str(row.get("meaning") or ""),
+            "romaji": str(row.get("romaji") or ""),
+        })
 
     res = {
-        "result" : results,
+        "result" : cleaned,
         "completed" : completed
     }
     return JSONResponse(content=res, status_code=200)

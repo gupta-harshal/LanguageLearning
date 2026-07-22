@@ -105,8 +105,8 @@ export default function ChatRoom() {
   }
 
   return (
-    <main className="flex min-h-[100svh] flex-col bg-[#0b1220] text-white">
-      <header className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+    <main className="flex h-[100dvh] flex-col overflow-hidden bg-[#0b1220] text-white">
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <Link to="/dashboard" className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
           ←
         </Link>
@@ -145,7 +145,7 @@ export default function ChatRoom() {
         </section>
       ) : (
         <>
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-3 [-webkit-overflow-scrolling:touch]">
             {messages.map((m) => (
               <div
                 key={m.id}
@@ -174,7 +174,7 @@ export default function ChatRoom() {
             </p>
           )}
 
-          <div className="border-t border-white/10 p-4 space-y-2">
+          <div className="shrink-0 border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-2">
             {preview && preview !== text && (
               <p className="text-xs text-emerald-200/80">
                 Romaji → <span className="font-japanese">{preview}</span>

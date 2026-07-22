@@ -92,23 +92,31 @@ export function outcomesToResults(outcomes: OutcomeInput[], source: SrsSource): 
   });
 }
 
-async function ensureSrs(userId: string) {
+/** Local deck used when the Python scheduler is asleep / misconfigured. */
+const FALLBACK_DECK = [
+  { id: 'fb-1', word: '水', meaning: 'water', furigana: 'みず', romaji: 'mizu', level: 5 },
+  { id: 'fb-2', word: '火', meaning: 'fire', furigana: 'ひ', romaji: 'hi', level: 5 },
+  { id: 'fb-3', word: '木', meaning: 'tree', furigana: 'き', romaji: 'ki', level: 5 },
+  { id: 'fb-4', word: '山', meaning: 'mountain', furigana: 'やま', romaji: 'yama', level: 5 },
+  { id: 'fb-5', word: '川', meaning: 'river', furigana: 'かわ', romaji: 'kawa', level: 5 },
+  { id: 'fb-6', word: '日', meaning: 'sun / day', furigana: 'ひ', romaji: 'hi', level: 5 },
+  { id: 'fb-7', word: '月', meaning: 'moon / month', furigana: 'つき', romaji: 'tsuki', level: 5 },
+  { id: 'fb-8', word: '人', meaning: 'person', furigana: 'ひと', romaji: 'hito', level: 5 },
+  { id: 'fb-9', word: '食べる', meaning: 'to eat', furigana: 'たべる', romaji: 'taberu', level: 5 },
+  { id: 'fb-10', word: '行く', meaning: 'to go', furigana: 'いく', romaji: 'iku', level: 5 },
+  { id: 'fb-11', word: '大きい', meaning: 'big', furigana: 'おおきい', romaji: 'ookii', level: 5 },
+  { id: 'fb-12', word: '小さい', meaning: 'small', furigana: 'ちいさい', romaji: 'chiisai', level: 5 },
+];
+
+async function ensureSrsRow(userId: string) {
   let row = await prisma.userSrs.findUnique({ where: { userId } });
   if (row) return row;
-
-  const experience = 0 as 0 | 1 | 2;
-  const maxTimeMin = 15 as 10 | 15 | 20;
-  const { scheduler: sched } = await scheduler.initializeScheduler({
-    maximumTime: maxTimeMin,
-    experience,
-  });
-
   row = await prisma.userSrs.create({
     data: {
       userId,
-      experience,
-      maxTimeMin,
-      scheduler: sched as object,
+      experience: 0,
+      maxTimeMin: 15,
+      scheduler: {},
       completed: {},
     },
   });
@@ -122,8 +130,9 @@ export async function getSrsOverview(userId: string) {
   const cardCount = Object.keys(completed).length;
   const healthy = await scheduler.schedulerHealth();
   return {
-    ready: !!row?.scheduler,
+    ready: true,
     schedulerOnline: healthy,
+    mode: healthy ? 'fsrs' : 'fallback',
     experience: row?.experience ?? 0,
     maxTimeMin: row?.maxTimeMin ?? 15,
     cardCount,
@@ -139,42 +148,58 @@ export async function bootstrapSrs(
     ? Number(prefs?.maxTimeMin)
     : 15) as 10 | 15 | 20;
 
-  const existing = await prisma.userSrs.findUnique({ where: { userId } });
-  if (existing?.scheduler) {
+  const existing = await ensureSrsRow(userId);
+  if (existing.scheduler && Object.keys(existing.scheduler as object).length > 0) {
     return existing;
   }
 
-  const { scheduler: sched } = await scheduler.initializeScheduler({
-    maximumTime: maxTimeMin,
-    experience,
-  });
-
-  if (existing) {
+  try {
+    const { scheduler: sched } = await scheduler.initializeScheduler({
+      maximumTime: maxTimeMin,
+      experience,
+    });
     return prisma.userSrs.update({
       where: { userId },
       data: { experience, maxTimeMin, scheduler: sched as object },
     });
+  } catch (err) {
+    console.warn('[srs] bootstrap scheduler unavailable, using fallback mode', err);
+    return prisma.userSrs.update({
+      where: { userId },
+      data: { experience, maxTimeMin },
+    });
   }
-
-  return prisma.userSrs.create({
-    data: {
-      userId,
-      experience,
-      maxTimeMin,
-      scheduler: sched as object,
-      completed: {},
-    },
-  });
 }
 
 export async function fetchDueCards(userId: string) {
-  const row = await ensureSrs(userId);
+  const row = await ensureSrsRow(userId);
   const completed = (row.completed as Record<string, unknown>) || {};
-  const data = await scheduler.getCards(completed);
-  return {
-    cards: data.result || [],
-    overview: await getSrsOverview(userId),
-  };
+  const overview = await getSrsOverview(userId);
+
+  try {
+    const data = await scheduler.getCards(completed);
+    const cards = (data.result || []).map((c) => ({
+      id: String(c.id ?? ''),
+      word: String(c.word ?? c.expression ?? ''),
+      meaning: String(c.meaning ?? c.definition ?? ''),
+      furigana: c.furigana != null ? String(c.furigana) : '',
+      romaji: c.romaji != null ? String(c.romaji) : '',
+      level: typeof c.level === 'number' ? c.level : Number(c.level) || 0,
+    }));
+    return { cards, overview, mode: 'fsrs' as const };
+  } catch (err) {
+    console.warn('[srs] getCards failed — serving fallback deck', err);
+    // Rotate fallback so sessions aren't identical
+    const done = new Set(Object.keys(completed));
+    const fresh = FALLBACK_DECK.filter((c) => !done.has(c.id));
+    const pool = fresh.length >= 6 ? fresh : FALLBACK_DECK;
+    const cards = [...pool].sort(() => Math.random() - 0.5).slice(0, 8);
+    return {
+      cards,
+      overview: { ...overview, schedulerOnline: false, mode: 'fallback' },
+      mode: 'fallback' as const,
+    };
+  }
 }
 
 export async function submitReview(
@@ -186,10 +211,7 @@ export async function submitReview(
     throw new Error('results required');
   }
 
-  const row = await ensureSrs(userId);
-  if (!row.scheduler) {
-    await bootstrapSrs(userId);
-  }
+  await ensureSrsRow(userId);
   const fresh = await prisma.userSrs.findUniqueOrThrow({ where: { userId } });
 
   const normalized = results.map((r) => ({
@@ -201,30 +223,44 @@ export async function submitReview(
     submission: Boolean(r.submission),
   }));
 
-  const reviewed = await scheduler.reviewCards({
-    scheduler: fresh.scheduler as Record<string, unknown>,
-    completed: (fresh.completed as Record<string, unknown>) || {},
-    results: normalized,
-    prefs: {
-      maximumTime: ([10, 15, 20].includes(fresh.maxTimeMin)
-        ? fresh.maxTimeMin
-        : 15) as 10 | 15 | 20,
-      experience: Math.min(2, Math.max(0, fresh.experience)) as 0 | 1 | 2,
-    },
-  });
+  let reviewLogs: unknown = null;
+  const online = await scheduler.schedulerHealth();
+  const hasScheduler =
+    online && fresh.scheduler && Object.keys(fresh.scheduler as object).length > 0;
 
-  await prisma.userSrs.update({
-    where: { userId },
-    data: {
-      scheduler: reviewed.scheduler as object,
-      completed: reviewed.completed as object,
-    },
-  });
+  if (hasScheduler) {
+    try {
+      const reviewed = await scheduler.reviewCards({
+        scheduler: fresh.scheduler as Record<string, unknown>,
+        completed: (fresh.completed as Record<string, unknown>) || {},
+        results: normalized,
+        prefs: {
+          maximumTime: ([10, 15, 20].includes(fresh.maxTimeMin)
+            ? fresh.maxTimeMin
+            : 15) as 10 | 15 | 20,
+          experience: Math.min(2, Math.max(0, fresh.experience)) as 0 | 1 | 2,
+        },
+      });
+      await prisma.userSrs.update({
+        where: { userId },
+        data: {
+          scheduler: reviewed.scheduler as object,
+          completed: reviewed.completed as object,
+        },
+      });
+      reviewLogs = reviewed.review_logs;
+    } catch (err) {
+      console.warn('[srs] review failed — recording local progress only', err);
+      await markLocalCompleted(userId, normalized);
+    }
+  } else {
+    await markLocalCompleted(userId, normalized);
+  }
 
   const correct = normalized.filter((r) => r.submission).length;
   const wrong = normalized.length - correct;
   const xpRates = SOURCE_XP[source] || SOURCE_XP.srs;
-  const xpGained = correct * xpRates.correct + wrong * xpRates.wrong + 5; // +5 session bonus
+  const xpGained = correct * xpRates.correct + wrong * xpRates.wrong + 5;
 
   const { stats } = await awardProgress(userId, { xpGained, source: source as PracticeSource });
 
@@ -242,8 +278,29 @@ export async function submitReview(
     xpGained,
     reviewed: normalized.length,
     correct,
-    review_logs: reviewed.review_logs,
+    review_logs: reviewLogs,
+    mode: hasScheduler ? 'fsrs' : 'fallback',
   };
+}
+
+async function markLocalCompleted(
+  userId: string,
+  results: Array<{ id: string; submission: boolean }>
+) {
+  const row = await prisma.userSrs.findUniqueOrThrow({ where: { userId } });
+  const completed = { ...((row.completed as Record<string, unknown>) || {}) };
+  for (const r of results) {
+    completed[r.id] = {
+      id: r.id,
+      local: true,
+      lastResult: r.submission ? 'good' : 'again',
+      at: new Date().toISOString(),
+    };
+  }
+  await prisma.userSrs.update({
+    where: { userId },
+    data: { completed: completed as object },
+  });
 }
 
 /** Submit simple outcomes; per-source profile decides the FSRS rating. */

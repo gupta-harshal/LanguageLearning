@@ -17,9 +17,10 @@ model User {
   password  String
   createdAt DateTime   @default(now())
 
-  stats     UserStats?     @relation("UserToStats")
-  srs       UserSrs?       @relation("UserToSrs")
-  journal   VocabJournal[] @relation("UserToJournal")
+  stats          UserStats?          @relation("UserToStats")
+  srs            UserSrs?            @relation("UserToSrs")
+  journal        VocabJournal[]      @relation("UserToJournal")
+  storyProgress  UserStoryProgress[] @relation("UserToStoryProgress")
 }
 
 model UserStats {
@@ -59,5 +60,38 @@ model VocabJournal {
   mastered  Boolean  @default(false)
   createdAt DateTime @default(now())
 
+  @@index([userId])
+}
+
+/** Levelled Japanese readers. sentences = [{ ja, reading, en }] */
+model Story {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug      String   @unique
+  level     Int // 1 (N5) … 5 (N3+)
+  order     Int      @default(0)
+  titleJa   String
+  titleEn   String
+  summary   String   @default("")
+  theme     String   @default("everyday")
+  sentences Json // StorySentence[]
+  createdAt DateTime @default(now())
+
+  progress UserStoryProgress[] @relation("StoryToProgress")
+
+  @@index([level])
+}
+
+model UserStoryProgress {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @db.ObjectId
+  user          User     @relation("UserToStoryProgress", fields: [userId], references: [id])
+  storyId       String   @db.ObjectId
+  story         Story    @relation("StoryToProgress", fields: [storyId], references: [id])
+  sentenceIndex Int      @default(0)
+  completed     Boolean  @default(false)
+  bestScore     Int      @default(0) // best read-aloud accuracy
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, storyId])
   @@index([userId])
 }

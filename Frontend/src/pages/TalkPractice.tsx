@@ -124,11 +124,32 @@ export default function TalkPractice() {
       setMood("happy")
       setTimeout(() => setMood("idle"), 800)
     } catch (err) {
-      setMood("idle")
-      if (err instanceof ApiError && err.status === 429) {
-        setError(err.message)
+      // Browser speech fallback when OpenAI TTS is capped / missing
+      try {
+        if ("speechSynthesis" in window) {
+          const utter = new SpeechSynthesisUtterance(text)
+          utter.lang = "ja-JP"
+          utter.rate = 0.9
+          await new Promise<void>((resolve) => {
+            utter.onend = () => resolve()
+            utter.onerror = () => resolve()
+            window.speechSynthesis.speak(utter)
+          })
+          setMood("happy")
+          setTimeout(() => setMood("idle"), 600)
+          return
+        }
+      } catch {
+        /* ignore */
       }
-      // Still show text even if TTS fails / capped
+      setMood("idle")
+      if (err instanceof ApiError) {
+        setError(
+          err.status === 429
+            ? err.message
+            : `Voice unavailable (${err.message}). Text replies still work.`
+        )
+      }
     }
   }
 
@@ -269,7 +290,7 @@ export default function TalkPractice() {
   }
 
   return (
-    <main className="relative min-h-[100svh] w-full overflow-hidden bg-[#0c0814] text-white">
+    <main className="relative min-h-[100svh] w-full overflow-x-hidden overflow-y-auto bg-[#0c0814] text-white">
       <div className="pointer-events-none absolute -top-24 left-1/4 h-80 w-80 rounded-full bg-pink-600/25 blur-[100px]" />
       <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 rounded-full bg-indigo-600/20 blur-[120px]" />
 
@@ -370,7 +391,7 @@ export default function TalkPractice() {
           </div>
         </section>
       ) : (
-        <div className="relative z-10 flex h-[calc(100svh-3.75rem)] flex-col lg:flex-row">
+        <div className="relative z-10 flex min-h-[calc(100svh-3.75rem)] flex-col lg:h-[calc(100svh-3.75rem)] lg:flex-row lg:overflow-hidden">
           {/* Character stage */}
           <div className="relative flex-1 min-h-[40vh] lg:min-h-0 border-b lg:border-b-0 lg:border-r border-white/10">
             <TalkAvatar mood={mood} />
